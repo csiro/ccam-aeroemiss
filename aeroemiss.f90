@@ -5,18 +5,19 @@ Program aeroemiss
 Implicit None
 
 Character*80, dimension(:,:), allocatable :: options
-Character*160, dimension(11) :: fname
+Character*160, dimension(13) :: fname
 Character*160 topofile,so2_anth,so2_ship,so2_biom
 Character*160 oc_anth,oc_ship,oc_biom
 Character*160 bc_anth,bc_ship,bc_biom
-Character*160 volcano
+Character*160 volcano,dmsfile,dustfile
 Integer nopts,month
 
 Namelist/aero/ topofile,month,so2_anth,so2_ship,so2_biom,oc_anth, &
-               oc_ship,oc_biom,bc_anth,bc_ship,bc_biom,volcano
+               oc_ship,oc_biom,bc_anth,bc_ship,bc_biom,volcano,   &
+               dmsfile,dustfile
                  
 
-Write(6,*) 'AEROEMISS - CMIP5 aerosols to CC grid (NOV-10)'
+Write(6,*) 'AEROEMISS - CMIP5 aerosols to CC grid (DEC-10)'
 
 ! Read switches
 nopts=1
@@ -44,6 +45,8 @@ fname(8)=so2_biom
 fname(9)=bc_biom
 fname(10)=oc_biom
 fname(11)=volcano
+fname(12)=dmsfile
+fname(13)=dustfile
 
 Call createaero(options,nopts,fname,month)
 
@@ -86,6 +89,8 @@ Write(6,*) '    oc_anth  = "IPCC_emissions_RCP45_OC_anthropogenic.nc"'
 Write(6,*) '    oc_ship  = "IPCC_emissions_RCP45_OC_ships.nc"'
 Write(6,*) '    oc_biom  = "IPCC_emissions_RCP45_OC_biomassburning.nc"'
 Write(6,*) '    volcano  = "contineous_volc.nc"'
+Write(6,*) '    dmsfile  = "dmsemiss.nc"'
+Write(6,*) '    dustfile = "ginoux.nc"'
 Write(6,*) "    /"
 Write(6,*)
 Write(6,*) "  where:"
@@ -101,6 +106,8 @@ Write(6,*) '    oc_anth       = Anthropogenic OC emissions file'
 Write(6,*) '    oc_ship       = Ships OC emissions file'
 Write(6,*) '    oc_biom       = Biomass burning OC emissions file'
 Write(6,*) '    volcano       = Volcanic emissions file'
+Write(6,*) '    dmsfile       = DMS and natural organics emission file'
+Write(6,*) '    dustfile      = Dust emission file'
 Write(6,*)
 Stop
 
@@ -143,7 +150,7 @@ Implicit None
 Integer, intent(in) :: nopts,month
 Character(len=*), dimension(nopts,2), intent(in) :: options
 Character*80, dimension(3) :: outputdesc
-Character*160, dimension(11) :: fname
+Character*160, dimension(13) :: fname
 Character*80 returnoption,outfile
 Character*45 header
 Character*9 formout
@@ -157,7 +164,7 @@ Integer, dimension(2) :: sibdim
 Integer, dimension(4) :: dimnum,dimid,dimcount
 Integer, dimension(0:4) :: ncidarr
 Integer, dimension(6) :: adate
-Integer, dimension(16) :: varid
+Integer, dimension(19) :: varid
 Integer sibsize,tunit,i,j,k,ierr,ilout
 
 outfile=returnoption('-o',options,nopts)
@@ -172,7 +179,7 @@ Write(6,*) "lon0,lat0 : ",lonlat
 Write(6,*) "Schmidt   : ",schmidt
 Allocate(gridout(sibdim(1),sibdim(2)),rlld(sibdim(1),sibdim(2),2))
 Allocate(topdata(sibdim(1),sibdim(2)))
-Allocate(lsdata(sibdim(1),sibdim(2)),aerosol(sibdim(1),sibdim(2),16))
+Allocate(lsdata(sibdim(1),sibdim(2)),aerosol(sibdim(1),sibdim(2),22))
 
 ilout=Min(sibdim(1),30) ! To be compatiable with terread
 Write(formout,'("(",i3,"f7.0)")',IOSTAT=ierr) ilout
@@ -225,10 +232,16 @@ outputdesc=(/ 'dmso', 'DMS ocean emission', 'kg m-2 s-1' /)
 Call ncaddvargen(ncidarr,outputdesc,5,2,varid(13),1.,0.)
 outputdesc=(/ 'dmst', 'DMS land emission', 'kg m-2 s-1' /)
 Call ncaddvargen(ncidarr,outputdesc,5,2,varid(14),1.,0.)
-outputdesc=(/ 'ocna', 'Ocean natural emission', 'kg m-2 s-1' /)
+outputdesc=(/ 'ocna', 'Natural organic emission', 'kg m-2 s-1' /)
 Call ncaddvargen(ncidarr,outputdesc,5,2,varid(15),1.,0.)
 outputdesc=(/ 'vso2', 'Volcanic emissions', 'kg m-2 s-1' /)
 Call ncaddvargen(ncidarr,outputdesc,5,2,varid(16),1.,0.)
+outputdesc=(/ 'sandem', 'Sand fraction that can erode', 'none' /)
+Call ncaddvargen(ncidarr,outputdesc,5,2,varid(17),1.,0.)
+outputdesc=(/ 'siltem', 'Silt fraction that can erode', 'none' /)
+Call ncaddvargen(ncidarr,outputdesc,5,2,varid(18),1.,0.)
+outputdesc=(/ 'clayem', 'Clay fraction that can erode', 'none' /)
+Call ncaddvargen(ncidarr,outputdesc,5,2,varid(19),1.,0.)
 Call ncenddef(ncidarr)
 alonlat(:,1)=(/ 1., real(sibdim(1)), 1. /)
 alonlat(:,2)=(/ 1., real(sibdim(2)), 1. /)
@@ -238,10 +251,9 @@ Call nclonlatgen(ncidarr,dimid,alonlat,alvl,atime,dimnum)
 
 Write(6,*) 'Write aerosol data'
 dimcount=(/ sibdim(1), sibdim(2), 1, 1 /)
-do i=1,15
+do i=1,19
   Call ncwritedatgen(ncidarr,aerosol(:,:,i),dimcount,varid(i))
 end do
-Call ncwritedatgen(ncidarr,aerosol(:,:,16),dimcount,varid(16))
 Call ncclose(ncidarr)
 
 Deallocate(gridout,rlld,topdata,lsdata,aerosol)
