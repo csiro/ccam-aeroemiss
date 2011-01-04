@@ -169,6 +169,8 @@ do j=1,3 ! 1=Anth,2=Shipping,3=Biomass burning
             if ((nint(lsdata(lci,lcj)).eq.1.and.j.ne.2).or. &
                 (nint(lsdata(lci,lcj)).eq.0.and.j.eq.2)) then
               aglon=rlld(lci,lcj,1)
+              if (aglon.lt.emlonlat(1,1)) aglon=aglon+360.
+              if (aglon.gt.emlonlat(1,1)+360.) aglon=aglon-360.
               aglat=rlld(lci,lcj,2)
               ii=nint((aglon-emlonlat(1,1))*real(arrsize(1,2)-1)/(emlonlat(1,2)-emlonlat(1,1)))+1
               jj=nint((aglat-emlonlat(2,1))*real(arrsize(2,2)-1)/(emlonlat(2,2)-emlonlat(2,1)))+1
@@ -245,6 +247,8 @@ do lcj=1,sibdim(2)
       if (nint(lsdata(lci,lcj)).eq.1) then
         aglon=rlld(lci,lcj,1)
         aglat=rlld(lci,lcj,2)
+        if (aglon.lt.emlonlat(1,1)) aglon=aglon+360.
+        if (aglon.gt.emlonlat(1,1)+360.) aglon=aglon-360.
         ii=nint((aglon-emlonlat(1,1))*real(arrsize(1,2)-1)/(emlonlat(1,2)-emlonlat(1,1)))+1
         jj=nint((aglat-emlonlat(2,1))*real(arrsize(2,2)-1)/(emlonlat(2,2)-emlonlat(2,1)))+1
         dataout(lci,lcj,16)=dataout(lci,lcj,16)+coverout(ii,jj)
@@ -320,9 +324,7 @@ do n=1,3
       select case(n)
         case(1)
           ltest=nint(lsdata(lci,lcj)).eq.0
-        case(2)
-          ltest=nint(lsdata(lci,lcj)).eq.1
-        case(3)
+        case(2,3)
           ltest=nint(lsdata(lci,lcj)).eq.1
       end select
       if (ltest) then
@@ -339,14 +341,14 @@ do n=1,3
         select case(n)
           case(1)
             ltest=nint(lsdata(lci,lcj)).eq.0
-          case(2)
-            ltest=nint(lsdata(lci,lcj)).eq.1
-          case(3)
+          case(2,3)
             ltest=nint(lsdata(lci,lcj)).eq.1
         end select
         if (ltest) then
           aglon=rlld(lci,lcj,1)
           aglat=rlld(lci,lcj,2)
+          if (aglon.lt.emlonlat(1,1)) aglon=aglon+360.
+          if (aglon.gt.emlonlat(1,1)+360.) aglon=aglon-360.
           ii=nint((aglon-emlonlat(1,1))*real(arrsize(1,2)-1)/(emlonlat(1,2)-emlonlat(1,1)))+1
           dis=(rlat-aglat)**2
           minpos=minloc(dis)
@@ -432,6 +434,8 @@ do n=1,3
         if (nint(lsdata(lci,lcj)).eq.1) then
           aglon=rlld(lci,lcj,1)
           aglat=rlld(lci,lcj,2)
+          if (aglon.lt.emlonlat(1,1)) aglon=aglon+360.
+          if (aglon.gt.emlonlat(1,1)+360.) aglon=aglon-360.
           ii=nint((aglon-emlonlat(1,1))*real(arrsize(1,2)-1)/(emlonlat(1,2)-emlonlat(1,1)))+1
           dis=(rlat-aglat)**2
           minpos=minloc(dis)
