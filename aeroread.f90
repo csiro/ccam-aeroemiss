@@ -274,7 +274,7 @@ If (ncstatus.NE.nf_noerr) Then
   Write(6,*) "ERROR: Error opening NetCDF file ",trim(fname(12))," (",ncstatus,")"
   Stop
 End If
-write(6,*) "Processing ",trim(fname(11))
+write(6,*) "Processing ",trim(fname(12))
 Call getncdims(ncid,ncsize)
 Call getnclonlat(ncid,emlonlat)
 
@@ -294,7 +294,7 @@ do n=1,3
 
   select case(n)
     case(1)
-      varname=(/ 'dmssea', 'kg m-2 s-1' /)
+      varname=(/ 'dmssea', 'conc' /)
       Call getmeta(ncid,varname,coverout,arrsize)
     case(2)
       varname=(/ 'dmsterr', 'kg m-2 s-1' /)
