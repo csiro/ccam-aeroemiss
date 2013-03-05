@@ -62,7 +62,6 @@ ncstatus=nf_close(ncid)
 !--------------------------------------------------------------------      
 ! allocate arrays    
 allocate(coverout(arrsize(1,2),arrsize(2,2)),tmpout(arrsize(1,2),arrsize(2,2)))
-coverout=0.
 
 Write(6,*) 'Process CMIP5 aerosol datasets'
 do j=1,3 ! 1=Anth,2=Shipping,3=Biomass burning
@@ -90,6 +89,8 @@ do j=1,3 ! 1=Anth,2=Shipping,3=Biomass burning
     end if
 
     do i=1,ix  ! 1=Level1,2=Upper level
+
+      coverout=0.
 
       pos=(j-1)*6+(n-1)*2+i
       select case(pos)
@@ -192,7 +193,7 @@ do j=1,3 ! 1=Anth,2=Shipping,3=Biomass burning
   end do
 end do
 
-! conver so2 to S
+! convert so2 to S
 dataout(:,:,1)=0.5*dataout(:,:,1)
 dataout(:,:,2)=0.5*dataout(:,:,2)
 dataout(:,:,7)=0.5*dataout(:,:,7)
