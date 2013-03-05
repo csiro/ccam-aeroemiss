@@ -153,7 +153,6 @@ Character*80, dimension(3) :: outputdesc
 Character*160, dimension(13) :: fname
 Character*80 returnoption,outfile
 Character*45 header
-Character*9 formout
 real, dimension(:,:,:), allocatable :: rlld,aerosol
 Real, dimension(:,:), allocatable :: gridout,lsdata,topdata
 Real, dimension(2) :: lonlat
@@ -165,7 +164,7 @@ Integer, dimension(4) :: dimnum,dimid,dimcount
 Integer, dimension(0:4) :: ncidarr
 Integer, dimension(6) :: adate
 Integer, dimension(19) :: varid
-Integer sibsize,tunit,i,j,k,ierr,ilout
+Integer sibsize,tunit,i,j,k,ierr
 
 outfile=returnoption('-o',options,nopts)
 
@@ -180,12 +179,7 @@ Allocate(gridout(sibdim(1),sibdim(2)),rlld(sibdim(1),sibdim(2),2))
 Allocate(topdata(sibdim(1),sibdim(2)))
 Allocate(lsdata(sibdim(1),sibdim(2)),aerosol(sibdim(1),sibdim(2),22))
 
-ilout=Min(sibdim(1),30) ! To be compatiable with terread
-Write(formout,'("(",i3,"f7.0)")',IOSTAT=ierr) ilout
-Read(tunit,formout,IOSTAT=ierr) topdata ! read topography
-Write(formout,'("(",i3,"f4.1)")',IOSTAT=ierr) ilout
-Read(tunit,formout,IOSTAT=ierr) lsdata ! Read ls mask
-Close(tunit)
+call gettopols(tunit,fname(1),lsdata,sibdim)
 
 ! Determine lat/lon to CC mapping
 Call ccgetgrid(rlld,gridout,sibdim,lonlat,schmidt,ds)
