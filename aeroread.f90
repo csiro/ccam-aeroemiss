@@ -1,7 +1,7 @@
 ! This subroutine is to extract (in memory) data from the CMIP5 aerosol dataset.
 !
 
-Subroutine getdata(dataout,glonlat,grid,lsdata,tlld,sibdim,fname,month)
+Subroutine getdata(dataout,grid,lsdata,rlld,sibdim,fname,month)
 
 Use ccinterp
 
@@ -20,35 +20,20 @@ integer i,j,n,ix,ii,jj,fp,pos,ind,lci,lcj,nface
 Real, dimension(sibdim(1),sibdim(2),19), intent(out) :: dataout
 real, dimension(sibdim(1),sibdim(2)) :: datatmp
 Real, dimension(sibdim(1),sibdim(2)), intent(in) :: grid,lsdata
-Real, dimension(sibdim(1),sibdim(2),2), intent(in) :: tlld
-Real, dimension(sibdim(1),sibdim(2),2) :: rlld
-Real, dimension(2), intent(in) :: glonlat
+Real, dimension(sibdim(1),sibdim(2),2), intent(in) :: rlld
 Real, dimension(:,:), allocatable :: coverout,tmpout
 Real, dimension(2,2) :: emlonlat
 real, dimension(:), allocatable :: rlat,dis
-real baselon,aglon,aglat,alci,alcj,ssum
+real aglon,aglat,alci,alcj,ssum
 character(len=*), dimension(13), intent(in) :: fname
 character*160, dimension(2) :: varname
 logical ltest
 
 dataout=0.
 
-baselon=real(int(glonlat(1)-180.))
-rlld=tlld
-Do While (Any(rlld(:,:,1).LT.baselon))
-  Where (rlld(:,:,1).LT.baselon)
-    rlld(:,:,1)=rlld(:,:,1)+360.
-  End where
-End do
-Do While (Any(rlld(:,:,1).GT.(baselon+360.)))
-  Where (rlld(:,:,1).GT.(baselon+360.))
-    rlld(:,:,1)=rlld(:,:,1)-360.
-  End where
-End do
-
 ! read size and coordinates
 ncstatus=nf_open(fname(2),nf_nowrite,ncid)
-If (ncstatus.NE.nf_noerr) Then
+If (ncstatus/=nf_noerr) Then
   Write(6,*) "ERROR: Error opening NetCDF file ",trim(fname(2))," (",ncstatus,")"
   Stop
 End If
@@ -70,19 +55,19 @@ do j=1,3 ! 1=Anth,2=Shipping,3=Biomass burning
     ! read emission array
     fp=(j-1)*3+n
     ncstatus=nf_open(fname(fp+1),nf_nowrite,ncid)
-    If (ncstatus.NE.nf_noerr) Then
+    If (ncstatus/=nf_noerr) Then
       Write(6,*) "ERROR: Error opening NetCDF file ",trim(fname(fp+1))," (",ncstatus,")"
       Stop
     End If 
     write(6,*) "Processing ",trim(fname(fp+1))
     call getncdims(ncid,ncsize)
-    if (ncsize(1).ne.arrsize(1,2).or.ncsize(2).ne.arrsize(2,2)) then
+    if (ncsize(1)/=arrsize(1,2).or.ncsize(2)/=arrsize(2,2)) then
       write(6,*) "ERROR: Grid size mismatch between files"
       stop
     end if
 
     ! no upper level ship emissions
-    if (j.eq.2) then
+    if (j==2) then
       ix=1
     else
       ix=2
@@ -174,8 +159,10 @@ do j=1,3 ! 1=Anth,2=Shipping,3=Biomass burning
               if (aglon.gt.emlonlat(1,1)+360.) aglon=aglon-360.
               aglat=rlld(lci,lcj,2)
               ii=nint((aglon-emlonlat(1,1))*real(arrsize(1,2)-1)/(emlonlat(1,2)-emlonlat(1,1)))+1
+              if (ii>arrsize(1,2)) ii=ii-arrsize(1,2)
               jj=nint((aglat-emlonlat(2,1))*real(arrsize(2,2)-1)/(emlonlat(2,2)-emlonlat(2,1)))+1
-              datatmp(lci,lcj)=datatmp(lci,lcj)+coverout(ii,jj)
+              jj=min(max(jj,1),arrsize(2,2))
+              datatmp(lci,lcj)=coverout(ii,jj)
             end if      
             countt(lci,lcj)=1
           end if
@@ -251,8 +238,10 @@ do lcj=1,sibdim(2)
         if (aglon.lt.emlonlat(1,1)) aglon=aglon+360.
         if (aglon.gt.emlonlat(1,1)+360.) aglon=aglon-360.
         ii=nint((aglon-emlonlat(1,1))*real(arrsize(1,2)-1)/(emlonlat(1,2)-emlonlat(1,1)))+1
+        if (ii>arrsize(1,2)) ii=ii-arrsize(1,2)
         jj=nint((aglat-emlonlat(2,1))*real(arrsize(2,2)-1)/(emlonlat(2,2)-emlonlat(2,1)))+1
-        dataout(lci,lcj,16)=dataout(lci,lcj,16)+coverout(ii,jj)
+        jj=min(max(jj,1),arrsize(2,2))
+        dataout(lci,lcj,16)=coverout(ii,jj)
       end if      
       countt(lci,lcj)=1
     end if
@@ -351,10 +340,11 @@ do n=1,3
           if (aglon.lt.emlonlat(1,1)) aglon=aglon+360.
           if (aglon.gt.emlonlat(1,1)+360.) aglon=aglon-360.
           ii=nint((aglon-emlonlat(1,1))*real(arrsize(1,2)-1)/(emlonlat(1,2)-emlonlat(1,1)))+1
+          if (ii>arrsize(1,2)) ii=ii-arrsize(1,2)
           dis=(rlat-aglat)**2
           minpos=minloc(dis)
           jj=minpos(1)
-          dataout(lci,lcj,12+n)=dataout(lci,lcj,12+n)+coverout(ii,jj)
+          dataout(lci,lcj,12+n)=coverout(ii,jj)
         end if      
         countt(lci,lcj)=1
       end if
@@ -435,13 +425,14 @@ do n=1,3
         if (nint(lsdata(lci,lcj)).eq.1) then
           aglon=rlld(lci,lcj,1)
           aglat=rlld(lci,lcj,2)
-          if (aglon.lt.emlonlat(1,1)) aglon=aglon+360.
-          if (aglon.gt.emlonlat(1,1)+360.) aglon=aglon-360.
+          if (aglon<emlonlat(1,1)) aglon=aglon+360.
+          if (aglon>emlonlat(1,1)+360.) aglon=aglon-360.
           ii=nint((aglon-emlonlat(1,1))*real(arrsize(1,2)-1)/(emlonlat(1,2)-emlonlat(1,1)))+1
+          if (ii>arrsize(1,2)) ii=ii-arrsize(1,2)
           dis=(rlat-aglat)**2
           minpos=minloc(dis)
           jj=minpos(1)
-          dataout(lci,lcj,16+n)=dataout(lci,lcj,16+n)+coverout(ii,jj)
+          dataout(lci,lcj,16+n)=coverout(ii,jj)
         end if      
         countt(lci,lcj)=1
       end if

@@ -152,7 +152,7 @@ Character(len=*), dimension(nopts,2), intent(in) :: options
 Character*80, dimension(3) :: outputdesc
 Character*160, dimension(13) :: fname
 Character*80 returnoption,outfile
-Character*45 header
+Character*47 header
 real, dimension(:,:,:), allocatable :: rlld,aerosol
 Real, dimension(:,:), allocatable :: gridout,lsdata,topdata
 Real, dimension(2) :: lonlat
@@ -177,7 +177,7 @@ Write(6,*) "lon0,lat0 : ",lonlat
 Write(6,*) "Schmidt   : ",schmidt
 Allocate(gridout(sibdim(1),sibdim(2)),rlld(sibdim(1),sibdim(2),2))
 Allocate(topdata(sibdim(1),sibdim(2)))
-Allocate(lsdata(sibdim(1),sibdim(2)),aerosol(sibdim(1),sibdim(2),22))
+Allocate(lsdata(sibdim(1),sibdim(2)),aerosol(sibdim(1),sibdim(2),19))
 
 call gettopols(tunit,fname(1),lsdata,sibdim)
 
