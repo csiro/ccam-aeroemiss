@@ -1,6 +1,6 @@
 FF = ifort
-XFLAGS = -O -I /tools/netcdf/3.6.0-p1/include
-LIBS = -L /tools/netcdf/3.6.0-p1/lib -lnetcdf
+XFLAGS = -O -xHost -I /apps/netcdf/4.1.3/include
+LIBS = -L /apps/netcdf/4.1.3/lib -lnetcdf -lnetcdff
 
 
 OBJT = aeroemiss.o aeroread.o setxyz_m.o ccinterp.o readswitch.o jimcc_m.o \

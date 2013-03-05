@@ -17,7 +17,7 @@ Namelist/aero/ topofile,month,so2_anth,so2_ship,so2_biom,oc_anth, &
                dmsfile,dustfile
                  
 
-Write(6,*) 'AEROEMISS - CMIP5 aerosols to CC grid (DEC-10)'
+Write(6,*) 'AEROEMISS - CMIP5 aerosols to CC grid (MAR-13)'
 
 ! Read switches
 nopts=1
@@ -171,8 +171,7 @@ outfile=returnoption('-o',options,nopts)
 
 ! Read topography file
 tunit=1
-Open(tunit,FILE=fname(1),FORM='formatted',STATUS='old',IOSTAT=ierr)
-Read(tunit,*,IOSTAT=ierr) sibdim(1),sibdim(2),lonlat(1),lonlat(2),schmidt,dsx,header
+call readtopography(tunit,fname(1),sibdim,lonlat,schmidt,dsx,header)
 
 Write(6,*) "Dimension : ",sibdim
 Write(6,*) "lon0,lat0 : ",lonlat
@@ -192,7 +191,7 @@ Close(tunit)
 Call ccgetgrid(rlld,gridout,sibdim,lonlat,schmidt,ds)
 
 ! Read CMIP5 aerosol data
-Call getdata(aerosol,lonlat,gridout,lsdata,rlld,sibdim,fname,month)
+Call getdata(aerosol,gridout,lsdata,rlld,sibdim,fname,month)
 
 ! Prep nc output
 dimnum(1:2)=sibdim(1:2) ! CC grid dimensions
