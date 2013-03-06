@@ -180,6 +180,7 @@ Allocate(topdata(sibdim(1),sibdim(2)))
 Allocate(lsdata(sibdim(1),sibdim(2)),aerosol(sibdim(1),sibdim(2),19))
 
 call gettopols(tunit,fname(1),lsdata,sibdim)
+lsdata=1.-lsdata
 
 ! Determine lat/lon to CC mapping
 Call ccgetgrid(rlld,gridout,sibdim,lonlat,schmidt,ds)
