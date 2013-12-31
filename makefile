@@ -1,6 +1,6 @@
 FF = ifort
-XFLAGS = -O -xHost -I $(NETCDF_ROOT)/include
-LIBS = -L $(NETCDF_ROOT)/lib -L $(HDF5_HOME)/lib -lnetcdf -lnetcdff -lhdf5 -lhdf5_hl
+XFLAGS = -xHost -I $(NETCDF_ROOT)/include
+LIBS = -L $(NETCDF_ROOT)/lib -lnetcdf -lnetcdff
 
 
 OBJT = aeroemiss.o aeroread.o setxyz_m.o ccinterp.o readswitch.o jimcc_m.o \

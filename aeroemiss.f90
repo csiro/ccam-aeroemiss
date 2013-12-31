@@ -154,7 +154,7 @@ Character*160, dimension(13) :: fname
 Character*80 returnoption,outfile
 Character*47 header
 real, dimension(:,:,:), allocatable :: rlld,aerosol
-Real, dimension(:,:), allocatable :: gridout,lsdata,topdata
+Real, dimension(:,:), allocatable :: gridout,lsdata
 Real, dimension(2) :: lonlat
 Real, dimension(3,2) :: alonlat
 Real, dimension(1) :: alvl,atime
@@ -176,7 +176,6 @@ Write(6,*) "Dimension : ",sibdim
 Write(6,*) "lon0,lat0 : ",lonlat
 Write(6,*) "Schmidt   : ",schmidt
 Allocate(gridout(sibdim(1),sibdim(2)),rlld(sibdim(1),sibdim(2),2))
-Allocate(topdata(sibdim(1),sibdim(2)))
 Allocate(lsdata(sibdim(1),sibdim(2)),aerosol(sibdim(1),sibdim(2),19))
 
 call gettopols(tunit,fname(1),lsdata,sibdim)
@@ -187,6 +186,8 @@ Call ccgetgrid(rlld,gridout,sibdim,lonlat,schmidt,ds)
 
 ! Read CMIP5 aerosol data
 Call getdata(aerosol,gridout,lsdata,rlld,sibdim,fname,month)
+
+Deallocate(gridout,rlld,lsdata)
 
 ! Prep nc output
 dimnum(1:2)=sibdim(1:2) ! CC grid dimensions
@@ -250,7 +251,7 @@ do i=1,19
 end do
 Call ncclose(ncidarr)
 
-Deallocate(gridout,rlld,topdata,lsdata,aerosol)
+Deallocate(aerosol)
 
 Return
 End
