@@ -1,5 +1,5 @@
 FF = ifort
-XFLAGS = -xHost -I $(NETCDF_ROOT)/include
+XFLAGS = -xHost -fpp -I $(NETCDF_ROOT)/include
 LIBS = -L $(NETCDF_ROOT)/lib -lnetcdf -lnetcdff
 
 
