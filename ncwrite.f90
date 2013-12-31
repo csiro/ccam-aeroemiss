@@ -212,11 +212,11 @@ Do i=1,4
         Write(6,*) "ERROR: Error defining dim in NetCDF file (",status,"): ",trim(desc(i,2))
         Stop
       End If
-      status=nf_put_att_text(ncidarr(0),dimvar(i),"positive",4,"down")
-      If (status /= nf_noerr) Then
-        Write(6,*) "ERROR: Error defining dim in NetCDF file (",status,"): ",trim(desc(i,2))
-        Stop
-      End If
+      !status=nf_put_att_text(ncidarr(0),dimvar(i),"positive",4,"down")
+      !If (status /= nf_noerr) Then
+      !  Write(6,*) "ERROR: Error defining dim in NetCDF file (",status,"): ",trim(desc(i,2))
+      !  Stop
+      !End If
     End if
     
     strlen=Len_trim(desc(i,2))
