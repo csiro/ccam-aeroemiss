@@ -17,7 +17,7 @@ Namelist/aero/ topofile,month,so2_anth,so2_ship,so2_biom,oc_anth, &
                dmsfile,dustfile
                  
 
-Write(6,*) 'AEROEMISS - CMIP5 aerosols to CC grid (MAR-13)'
+Write(6,*) 'AEROEMISS - CMIP5 aerosols to CC grid (JUL-14)'
 
 ! Read switches
 nopts=1
@@ -223,7 +223,7 @@ outputdesc=(/ 'ocb1', 'OC Bio lvl1 emission', 'kg m-2 s-1' /)
 Call ncaddvargen(ncidarr,outputdesc,5,2,varid(11),1.,0.)
 outputdesc=(/ 'ocb2', 'OC Bio lvl2 emission', 'kg m-2 s-1' /)
 Call ncaddvargen(ncidarr,outputdesc,5,2,varid(12),1.,0.)
-outputdesc=(/ 'dmso', 'DMS ocean emission', 'kg m-2 s-1' /)
+outputdesc=(/ 'dmso', 'DMS ocean emission', 'conc' /)
 Call ncaddvargen(ncidarr,outputdesc,5,2,varid(13),1.,0.)
 outputdesc=(/ 'dmst', 'DMS land emission', 'kg m-2 s-1' /)
 Call ncaddvargen(ncidarr,outputdesc,5,2,varid(14),1.,0.)
