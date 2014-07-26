@@ -253,9 +253,9 @@ ncstatus=nf_close(ncid)
 ! add to other emissions
 dataout(:,:,16)=dataout(:,:,16)/real(countt)
 
-! Normalise to 1Tg/(yr*m2)
+! Normalise to 1Tg/yr
 ssum=sum(dataout(:,:,16))
-dataout(:,:,16)=dataout(:,:,16)*1.E9/(86500.*365.*ssum*grid*grid*1.E6)
+dataout(:,:,16)=dataout(:,:,16)*1.E9/(86400.*365.25*ssum*grid*grid*1.E6)
 
 deallocate(coverout)
 
