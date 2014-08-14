@@ -199,43 +199,81 @@ Call ncinitcc(ncidarr,outfile,dimnum(1:3),dimid,adate)
 call ncatt(ncidarr,'lat0',lonlat(2))
 call ncatt(ncidarr,'lon0',lonlat(1))
 call ncatt(ncidarr,'schmidt0',schmidt)
-outputdesc=(/ 'so2a1', 'SO2 Anth lvl1 emission', 'kg m-2 s-1' /)
+outputdesc(1)='so2a1'
+outputdesc(2)='SO2 Anth lvl1 emission'
+outputdesc(3)='kg m-2 s-1'
 Call ncaddvargen(ncidarr,outputdesc,5,2,varid(1),1.,0.)
-outputdesc=(/ 'so2a2', 'SO2 Anth lvl2 emission', 'kg m-2 s-1' /)
+outputdesc(1)='so2a2'
+outputdesc(2)='SO2 Anth lvl2 emission'
+outputdesc(3)='kg m-2 s-1'
 Call ncaddvargen(ncidarr,outputdesc,5,2,varid(2),1.,0.)
-outputdesc=(/ 'bca1', 'BC Anth lvl1 emission', 'kg m-2 s-1' /)
+outputdesc(1)='bca1'
+outputdesc(2)='BC Anth lvl1 emission'
+outputdesc(3)='kg m-2 s-1'
 Call ncaddvargen(ncidarr,outputdesc,5,2,varid(3),1.,0.)
-outputdesc=(/ 'bca2', 'BC Anth lvl2 emission', 'kg m-2 s-1' /)
+outputdesc(1)='bca2'
+outputdesc(2)='BC Anth lvl2 emission'
+outputdesc(3)='kg m-2 s-1'
 Call ncaddvargen(ncidarr,outputdesc,5,2,varid(4),1.,0.)
-outputdesc=(/ 'oca1', 'OC Anth lvl1 emission', 'kg m-2 s-1' /)
+outputdesc(1)='oca1'
+outputdesc(2)='OC Anth lvl1 emission'
+outputdesc(3)='kg m-2 s-1'
 Call ncaddvargen(ncidarr,outputdesc,5,2,varid(5),1.,0.)
-outputdesc=(/ 'oca2', 'OC Anth lvl2 emission', 'kg m-2 s-1' /)
+outputdesc(1)='oca2'
+outputdesc(2)='OC Anth lvl2 emission'
+outputdesc(3)='kg m-2 s-1'
 Call ncaddvargen(ncidarr,outputdesc,5,2,varid(6),1.,0.)
-outputdesc=(/ 'so2b1', 'SO2 Bio lvl1 emission', 'kg m-2 s-1' /)
+outputdesc(1)='so2b1'
+outputdesc(2)='SO2 Bio lvl1 emission'
+outputdesc(3)='kg m-2 s-1'
 Call ncaddvargen(ncidarr,outputdesc,5,2,varid(7),1.,0.)
-outputdesc=(/ 'so2b2', 'SO2 Bio lvl2 emission', 'kg m-2 s-1' /)
+outputdesc(1)='so2b2'
+outputdesc(2)='SO2 Bio lvl2 emission'
+outputdesc(3)='kg m-2 s-1'
 Call ncaddvargen(ncidarr,outputdesc,5,2,varid(8),1.,0.)
-outputdesc=(/ 'bcb1', 'BC Bio lvl1 emission', 'kg m-2 s-1' /)
+outputdesc(1)='bcb1'
+outputdesc(2)='BC Bio lvl1 emission'
+outputdesc(3)='kg m-2 s-1'
 Call ncaddvargen(ncidarr,outputdesc,5,2,varid(9),1.,0.)
-outputdesc=(/ 'bcb2', 'BC Bio lvl2 emission', 'kg m-2 s-1' /)
+outputdesc(1)='bcb2'
+outputdesc(2)='BC Bio lvl2 emission'
+outputdesc(3)='kg m-2 s-1'
 Call ncaddvargen(ncidarr,outputdesc,5,2,varid(10),1.,0.)
-outputdesc=(/ 'ocb1', 'OC Bio lvl1 emission', 'kg m-2 s-1' /)
+outputdesc(1)='ocb1'
+outputdesc(2)='OC Bio lvl1 emission'
+outputdesc(3)='kg m-2 s-1'
 Call ncaddvargen(ncidarr,outputdesc,5,2,varid(11),1.,0.)
-outputdesc=(/ 'ocb2', 'OC Bio lvl2 emission', 'kg m-2 s-1' /)
+outputdesc(1)='ocb2'
+outputdesc(2)='OC Bio lvl2 emission'
+outputdesc(3)='kg m-2 s-1'
 Call ncaddvargen(ncidarr,outputdesc,5,2,varid(12),1.,0.)
-outputdesc=(/ 'dmso', 'DMS ocean emission', 'conc' /)
+outputdesc(1)='dmso'
+outputdesc(2)='DMS ocean emission'
+outputdesc(3)='conc'
 Call ncaddvargen(ncidarr,outputdesc,5,2,varid(13),1.,0.)
-outputdesc=(/ 'dmst', 'DMS land emission', 'kg m-2 s-1' /)
+outputdesc(1)='dmst'
+outputdesc(2)='DMS land emission'
+outputdesc(3)='kg m-2 s-1'
 Call ncaddvargen(ncidarr,outputdesc,5,2,varid(14),1.,0.)
-outputdesc=(/ 'ocna', 'Natural organic emission', 'kg m-2 s-1' /)
+outputdesc(1)='ocna'
+outputdesc(2)='Natural organic emission'
+outputdesc(3)='kg m-2 s-1'
 Call ncaddvargen(ncidarr,outputdesc,5,2,varid(15),1.,0.)
-outputdesc=(/ 'vso2', 'Volcanic emissions', 'kg m-2 s-1' /)
+outputdesc(1)='vso2'
+outputdesc(2)='Volcanic emissions'
+outputdesc(3)='kg m-2 s-1'
 Call ncaddvargen(ncidarr,outputdesc,5,2,varid(16),1.,0.)
-outputdesc=(/ 'sandem', 'Sand fraction that can erode', 'none' /)
+outputdesc(1)='sandem'
+outputdesc(2)='Sand fraction that can erode'
+outputdesc(3)='none'
 Call ncaddvargen(ncidarr,outputdesc,5,2,varid(17),1.,0.)
-outputdesc=(/ 'siltem', 'Silt fraction that can erode', 'none' /)
+outputdesc(1)='siltem'
+outputdesc(2)='Silt fraction that can erode'
+outputdesc(3)='none'
 Call ncaddvargen(ncidarr,outputdesc,5,2,varid(18),1.,0.)
-outputdesc=(/ 'clayem', 'Clay fraction that can erode', 'none' /)
+outputdesc(1)='clayem'
+outputdesc(2)='Clay fraction that can erode'
+outputdesc(3)='none'
 Call ncaddvargen(ncidarr,outputdesc,5,2,varid(19),1.,0.)
 Call ncenddef(ncidarr)
 alonlat(:,1)=(/ 1., real(sibdim(1)), 1. /)

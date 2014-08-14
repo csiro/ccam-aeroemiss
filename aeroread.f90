@@ -80,43 +80,52 @@ do j=1,3 ! 1=Anth,2=Shipping,3=Biomass burning
       pos=(j-1)*6+(n-1)*2+i
       select case(pos)
         case(1,3,5) ! SO2,BC,OC Anth Level1
-          varname=(/ 'emiss_awb', 'kg m-2 s-1' /)
+          varname(1)='emiss_awb'
+          varname(2)='kg m-2 s-1'
           Call getmeta(ncid,varname,tmpout,arrsize)
           coverout=coverout+tmpout
-          varname=(/ 'emiss_dom', 'kg m-2 s-1' /)
+          varname(1)='emiss_dom'
+          varname(2)='kg m-2 s-1'
           Call getmeta(ncid,varname,tmpout,arrsize)
           coverout=coverout+tmpout
-          varname=(/ 'emiss_tra', 'kg m-2 s-1' /)
+          varname(1)='emiss_tra'
+          varname(2)='kg m-2 s-1'
           Call getmeta(ncid,varname,tmpout,arrsize)
           coverout=coverout+tmpout
-          varname=(/ 'emiss_wst', 'kg m-2 s-1' /)
+          varname(1)='emiss_wst'
+          varname(2)='kg m-2 s-1'
           Call getmeta(ncid,varname,tmpout,arrsize)
           coverout=coverout+tmpout
           ind=(n-1)*2+1
 
         case(2,4,6) ! SO2,BC,OC Anth Upper level
-          varname=(/ 'emiss_ene', 'kg m-2 s-1' /)
+          varname(1)='emiss_ene'
+          varname(2)='kg m-2 s-1'
           Call getmeta(ncid,varname,tmpout,arrsize)
           coverout=coverout+tmpout
-          varname=(/ 'emiss_ind', 'kg m-2 s-1' /)
+          varname(1)='emiss_ind'
+          varname(2)='kg m-2 s-1'
           Call getmeta(ncid,varname,tmpout,arrsize)
           coverout=coverout+tmpout
           ind=n*2
 
         case(7,9,11) ! SO2,BC,OC Ship Level1
-          varname=(/ 'emiss_shp', 'kg m-2 s-1' /)
+          varname(1)='emiss_shp'
+          varname(2)='kg m-2 s-1'
           Call getmeta(ncid,varname,tmpout,arrsize)
           coverout=coverout+tmpout
           ind=(n-1)*2+1
 
         case(13,15,17) ! SO2,BC,OC Biomass burning level1
-          varname=(/ 'grassfire', 'kg m-2 s-1' /)
+          varname(1)='grassfire'
+          varname(2)='kg m-2 s-1'
           Call getmeta(ncid,varname,tmpout,arrsize)
           coverout=coverout+tmpout
           ind=(n-1)*2+7        
 
         case(14,16,18) ! SO2,BC,OC Biomass burning upper level
-          varname=(/ 'forestfire', 'kg m-2 s-1' /)
+          varname(1)='forestfire'
+          varname(2)='kg m-2 s-1'
           Call getmeta(ncid,varname,tmpout,arrsize)
           coverout=coverout+tmpout
           ind=(n-1)*2+8
@@ -140,8 +149,8 @@ do j=1,3 ! 1=Anth,2=Shipping,3=Biomass burning
           lcj = nint(alcj)
           lcj = lcj+nface*sibdim(1)
           ! bin emission
-          if ((nint(lsdata(lci,lcj)).eq.1.and.j.ne.2).or. &
-              (nint(lsdata(lci,lcj)).eq.0.and.j.eq.2)) then
+          if ((nint(lsdata(lci,lcj))==1.and.j/=2).or. &
+              (nint(lsdata(lci,lcj))==0.and.j==2)) then
             datatmp(lci,lcj)=datatmp(lci,lcj)+coverout(ii,jj)
           end if
           countt(lci,lcj)=countt(lci,lcj)+1
@@ -151,12 +160,12 @@ do j=1,3 ! 1=Anth,2=Shipping,3=Biomass burning
       ! fill missing values
       do lcj=1,sibdim(2)
         do lci=1,sibdim(1)
-          if (countt(lci,lcj).eq.0) then
-            if ((nint(lsdata(lci,lcj)).eq.1.and.j.ne.2).or. &
-                (nint(lsdata(lci,lcj)).eq.0.and.j.eq.2)) then
+          if (countt(lci,lcj)==0) then
+            if ((nint(lsdata(lci,lcj))==1.and.j/=2).or. &
+                (nint(lsdata(lci,lcj))==0.and.j==2)) then
               aglon=rlld(lci,lcj,1)
-              if (aglon.lt.emlonlat(1,1)) aglon=aglon+360.
-              if (aglon.gt.emlonlat(1,1)+360.) aglon=aglon-360.
+              if (aglon<emlonlat(1,1)) aglon=aglon+360.
+              if (aglon>emlonlat(1,1)+360.) aglon=aglon-360.
               aglat=rlld(lci,lcj,2)
               ii=nint((aglon-emlonlat(1,1))*real(arrsize(1,2)-1)/(emlonlat(1,2)-emlonlat(1,1)))+1
               if (ii>arrsize(1,2)) ii=ii-arrsize(1,2)
@@ -192,7 +201,7 @@ deallocate(coverout,tmpout)
 ! volcanic emissions
 Write(6,*) "Process volcanic emissions"
 ncstatus=nf_open(fname(11),nf_nowrite,ncid)
-If (ncstatus.NE.nf_noerr) Then
+If (ncstatus/=nf_noerr) Then
   Write(6,*) "ERROR: Error opening NetCDF file ",trim(fname(11))," (",ncstatus,")"
   Stop
 End If
@@ -207,7 +216,8 @@ allocate(coverout(arrsize(1,2),arrsize(2,2)))
 coverout=0.
 countt=0
 
-varname=(/ 'field', 'kg/yr' /)
+varname(1)='field'
+varname(2)='kg/yr'
 Call getmeta(ncid,varname,coverout,arrsize)
 
 ! bin tracer
@@ -221,7 +231,7 @@ do jj=1,arrsize(2,2)
     lcj = nint(alcj)
     lcj = lcj+nface*sibdim(1)
     ! bin emission
-    if (nint(lsdata(lci,lcj)).eq.1) then
+    if (nint(lsdata(lci,lcj))==1) then
       dataout(lci,lcj,16)=dataout(lci,lcj,16)+coverout(ii,jj)
     end if
     countt(lci,lcj)=countt(lci,lcj)+1
@@ -231,12 +241,12 @@ end do
 ! fill missing values
 do lcj=1,sibdim(2)
   do lci=1,sibdim(1)
-    if (countt(lci,lcj).eq.0) then
-      if (nint(lsdata(lci,lcj)).eq.1) then
+    if (countt(lci,lcj)==0) then
+      if (nint(lsdata(lci,lcj))==1) then
         aglon=rlld(lci,lcj,1)
         aglat=rlld(lci,lcj,2)
-        if (aglon.lt.emlonlat(1,1)) aglon=aglon+360.
-        if (aglon.gt.emlonlat(1,1)+360.) aglon=aglon-360.
+        if (aglon<emlonlat(1,1)) aglon=aglon+360.
+        if (aglon>emlonlat(1,1)+360.) aglon=aglon-360.
         ii=nint((aglon-emlonlat(1,1))*real(arrsize(1,2)-1)/(emlonlat(1,2)-emlonlat(1,1)))+1
         if (ii>arrsize(1,2)) ii=ii-arrsize(1,2)
         jj=nint((aglat-emlonlat(2,1))*real(arrsize(2,2)-1)/(emlonlat(2,2)-emlonlat(2,1)))+1
@@ -253,7 +263,7 @@ ncstatus=nf_close(ncid)
 ! add to other emissions
 dataout(:,:,16)=dataout(:,:,16)/real(countt)
 
-! Normalise to 1Tg/yr
+! Normalise to 1Tg/yr (note grid is in km)
 ssum=sum(dataout(:,:,16))
 dataout(:,:,16)=dataout(:,:,16)*1.E9/(86400.*365.25*ssum*grid*grid*1.E6)
 
@@ -278,7 +288,8 @@ coverout=0.
 
 arrsize=1
 arrsize(2,2)=ncsize(2)
-varname=(/ 'latitude', 'degrees_north' /)
+varname(1)='latitude'
+varname(2)='degrees_north'
 Call getmeta(ncid,varname,rlat,arrsize)
 
 arrsize=1
@@ -288,13 +299,16 @@ do n=1,3
 
   select case(n)
     case(1)
-      varname=(/ 'dmssea', 'conc' /)
+      varname(1)='dmssea'
+      varname(2)='conc'
       Call getmeta(ncid,varname,coverout,arrsize)
     case(2)
-      varname=(/ 'dmsterr', 'kg m-2 s-1' /)
+      varname(1)='dmsterr'
+      varname(2)='kg m-2 s-1'
       Call getmeta(ncid,varname,coverout,arrsize)
     case(3)
-      varname=(/ 'natorg', 'kg m-2 s-1' /)
+      varname(1)='natorg'
+      varname(2)='kg m-2 s-1'
       Call getmeta(ncid,varname,coverout,arrsize)
   end select
 
@@ -313,9 +327,9 @@ do n=1,3
       ! bin emission
       select case(n)
         case(1)
-          ltest=nint(lsdata(lci,lcj)).eq.0
+          ltest=nint(lsdata(lci,lcj))==0
         case(2,3)
-          ltest=nint(lsdata(lci,lcj)).eq.1
+          ltest=nint(lsdata(lci,lcj))==1
       end select
       if (ltest) then
         dataout(lci,lcj,12+n)=dataout(lci,lcj,12+n)+coverout(ii,jj)
@@ -327,18 +341,18 @@ do n=1,3
   ! fill missing values
   do lcj=1,sibdim(2)
     do lci=1,sibdim(1)
-      if (countt(lci,lcj).eq.0) then
+      if (countt(lci,lcj)==0) then
         select case(n)
           case(1)
-            ltest=nint(lsdata(lci,lcj)).eq.0
+            ltest=nint(lsdata(lci,lcj))==0
           case(2,3)
-            ltest=nint(lsdata(lci,lcj)).eq.1
+            ltest=nint(lsdata(lci,lcj))==1
         end select
         if (ltest) then
           aglon=rlld(lci,lcj,1)
           aglat=rlld(lci,lcj,2)
-          if (aglon.lt.emlonlat(1,1)) aglon=aglon+360.
-          if (aglon.gt.emlonlat(1,1)+360.) aglon=aglon-360.
+          if (aglon<emlonlat(1,1)) aglon=aglon+360.
+          if (aglon>emlonlat(1,1)+360.) aglon=aglon-360.
           ii=nint((aglon-emlonlat(1,1))*real(arrsize(1,2)-1)/(emlonlat(1,2)-emlonlat(1,1)))+1
           if (ii>arrsize(1,2)) ii=ii-arrsize(1,2)
           dis=(rlat-aglat)**2
@@ -378,7 +392,8 @@ coverout=0.
 
 arrsize=1
 arrsize(2,2)=ncsize(2)
-varname=(/ 'latitude', 'degrees_north' /)
+varname(1)='latitude'
+varname(2)='degrees_north'
 Call getmeta(ncid,varname,rlat,arrsize)
 
 arrsize=1
@@ -388,13 +403,16 @@ do n=1,3
 
   select case(n)
     case(1)
-      varname=(/ 'sand', 'none' /)
+      varname(1)='sand'
+      varname(2)='none'
       Call getmeta(ncid,varname,coverout,arrsize)
     case(2)
-      varname=(/ 'silt', 'none' /)
+      varname(1)='silt'
+      varname(2)='none'
       Call getmeta(ncid,varname,coverout,arrsize)
     case(3)
-      varname=(/ 'clay', 'none' /)
+      varname(1)='clay'
+      varname(2)='none'
       Call getmeta(ncid,varname,coverout,arrsize)
   end select
 
@@ -411,7 +429,7 @@ do n=1,3
       lcj = nint(alcj)
       lcj = lcj+nface*sibdim(1)
       ! bin emission
-      if (nint(lsdata(lci,lcj)).eq.1) then
+      if (nint(lsdata(lci,lcj))==1) then
         dataout(lci,lcj,16+n)=dataout(lci,lcj,16+n)+coverout(ii,jj)
       end if
       countt(lci,lcj)=countt(lci,lcj)+1
@@ -421,8 +439,8 @@ do n=1,3
   ! fill missing values
   do lcj=1,sibdim(2)
     do lci=1,sibdim(1)
-      if (countt(lci,lcj).eq.0) then
-        if (nint(lsdata(lci,lcj)).eq.1) then
+      if (countt(lci,lcj)==0) then
+        if (nint(lsdata(lci,lcj))==1) then
           aglon=rlld(lci,lcj,1)
           aglat=rlld(lci,lcj,2)
           if (aglon<emlonlat(1,1)) aglon=aglon+360.
