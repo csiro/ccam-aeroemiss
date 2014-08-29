@@ -294,6 +294,7 @@ Call getmeta(ncid,varname,rlat,arrsize)
 
 arrsize=1
 arrsize(1:2,2)=ncsize(1:2)
+arrsize(4,1)=month
 
 do n=1,3
 
@@ -398,6 +399,7 @@ Call getmeta(ncid,varname,rlat,arrsize)
 
 arrsize=1
 arrsize(1:2,2)=ncsize(1:2)
+arrsize(4,1)=1
 
 do n=1,3
 

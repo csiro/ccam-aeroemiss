@@ -248,7 +248,7 @@ outputdesc(2)='OC Bio lvl2 emission'
 outputdesc(3)='kg m-2 s-1'
 Call ncaddvargen(ncidarr,outputdesc,5,2,varid(12),1.,0.)
 outputdesc(1)='dmso'
-outputdesc(2)='DMS ocean emission'
+outputdesc(2)='DMS ocean concentration'
 outputdesc(3)='conc'
 Call ncaddvargen(ncidarr,outputdesc,5,2,varid(13),1.,0.)
 outputdesc(1)='dmst'
