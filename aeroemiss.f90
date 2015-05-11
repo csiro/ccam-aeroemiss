@@ -15,7 +15,11 @@ Integer nopts,month
 Namelist/aero/ topofile,month,so2_anth,so2_ship,so2_biom,oc_anth, &
                oc_ship,oc_biom,bc_anth,bc_ship,bc_biom,volcano,   &
                dmsfile,dustfile
-                 
+
+#ifndef stacklimit
+! For linux only - removes stacklimit on all processors
+call setstacklimit(-1)
+#endif                   
 
 Write(6,*) 'AEROEMISS - CMIP5 aerosols to CC grid (JUL-14)'
 

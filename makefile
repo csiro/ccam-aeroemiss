@@ -6,7 +6,7 @@ LIBS = -L $(NETCDF_ROOT)/lib -lnetcdf -lnetcdff
 OBJT = aeroemiss.o aeroread.o setxyz_m.o ccinterp.o readswitch.o jimcc_m.o \
        latltoij_m.o xyzinfo_m.o newmpar_m.o indices_m.o \
        parm_m.o precis_m.o ind_m.o jimco_m.o jim_utils.o nfft_m.o \
-       ncread.o ncwrite.o misc.o
+       ncread.o ncwrite.o misc.o stacklimit.o
 
 aeroemiss :$(OBJT)
 	$(FF) $(XFLAGS) $(OBJT) $(LIBS) -o aeroemiss
@@ -16,6 +16,10 @@ clean:
 # This section gives the rules for building oect modules.
 
 .SUFFIXES:.f90
+
+stacklimit.o: stacklimit.c
+	cc -c stacklimit.c
+
 .f90.o:
 	$(FF) -c $(XFLAGS) $<
 .f.o:
