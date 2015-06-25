@@ -4,10 +4,9 @@
 Subroutine getdata(dataout,grid,lsdata,rlld,sibdim,fname,month)
 
 Use ccinterp
+use netcdf_m
 
 Implicit None
-
-include 'netcdf.inc'
 
 Integer, intent(in) :: month
 Integer, dimension(2), intent(in) :: sibdim
@@ -393,6 +392,7 @@ coverout=0.
 
 arrsize=1
 arrsize(2,2)=ncsize(2)
+
 varname(1)='latitude'
 varname(2)='degrees_north'
 Call getmeta(ncid,varname,rlat,arrsize)
