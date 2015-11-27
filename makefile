@@ -1,6 +1,15 @@
 FF = ifort
 XFLAGS = -xHost -fpp -I $(NETCDF_ROOT)/include
 LIBS = -L $(NETCDF_ROOT)/lib -lnetcdf -lnetcdff
+PPFLAG90 =
+PPFLAG77 =
+
+ifeq ($(GFORTRAN),yes)
+FF = gfortran
+XFLAGS = -O2 -mtune=native -march=native -I $(NETCDF_ROOT)/include
+PPFLAG90 = -x f95-cpp-input
+PPFLAG77 = -x f77-cpp-input
+endif
 
 
 OBJT = aeroemiss.o aeroread.o setxyz_m.o ccinterp.o readswitch.o jimcc_m.o \
@@ -21,9 +30,9 @@ stacklimit.o: stacklimit.c
 	cc -c stacklimit.c
 
 .f90.o:
-	$(FF) -c $(XFLAGS) $<
+	$(FF) -c $(XFLAGS) $(PPFLAG90) $<
 .f.o:
-	$(FF) -c $(XFLAGS) $<
+	$(FF) -c $(XFLAGS) $(PPFLAG77) $<
 
 # Remove mod rule from Modula 2 so GNU make doesn't get confused
 %.o : %.mod
