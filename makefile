@@ -1,8 +1,10 @@
+ifneq ($(CUSTOM),yes)
 FF = ifort
-XFLAGS = -xHost -fpp -I $(NETCDF_ROOT)/include
+XFLAGS = -xHost -I $(NETCDF_ROOT)/include
 LIBS = -L $(NETCDF_ROOT)/lib -lnetcdf -lnetcdff
-PPFLAG90 =
-PPFLAG77 =
+PPFLAG90 = -fpp
+PPFLAG77 = -fpp
+endif
 
 ifeq ($(GFORTRAN),yes)
 FF = gfortran
