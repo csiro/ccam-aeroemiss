@@ -1,16 +1,38 @@
+
+# Intel compiler options
 ifneq ($(CUSTOM),yes)
-FF = ifort
+FC = ifort
 XFLAGS = -xHost -I $(NETCDF_ROOT)/include
 LIBS = -L $(NETCDF_ROOT)/lib -lnetcdf -lnetcdff
 PPFLAG90 = -fpp
 PPFLAG77 = -fpp
+DEBUGFLAG = -check all -debug all -traceback -fpe0
 endif
 
+
+# Gfortran compiler options
 ifeq ($(GFORTRAN),yes)
-FF = gfortran
+FC = gfortran
 XFLAGS = -O2 -mtune=native -march=native -I $(NETCDF_ROOT)/include
 PPFLAG90 = -x f95-cpp-input
 PPFLAG77 = -x f77-cpp-input
+DEBUGFLAG = -g -Wall -Wextra -fbounds-check -fbacktrace
+endif
+
+
+# Cray compiler options
+ifeq ($(CRAY),yes)
+FC = ftn
+XFLAGS =
+PPFLAG90 = -eZ
+PPFLAG77 = -eZ
+DEBUGFLAG =
+endif
+
+
+# Testing - I/O and fpmodel
+ifeq ($(TEST),yes)
+XFLAGS += $(DEBUGFLAG)
 endif
 
 
@@ -20,7 +42,7 @@ OBJT = aeroemiss.o aeroread.o setxyz_m.o ccinterp.o readswitch.o jimcc_m.o \
        ncread.o ncwrite.o misc.o netcdf_m.o stacklimit.o
 
 aeroemiss :$(OBJT)
-	$(FF) $(XFLAGS) $(OBJT) $(LIBS) -o aeroemiss
+	$(FC) $(XFLAGS) $(OBJT) $(LIBS) -o aeroemiss
 
 clean:
 	rm *.o *.mod aeroemiss
@@ -32,9 +54,9 @@ stacklimit.o: stacklimit.c
 	cc -c stacklimit.c
 
 .f90.o:
-	$(FF) -c $(XFLAGS) $(PPFLAG90) $<
+	$(FC) -c $(XFLAGS) $(PPFLAG90) $<
 .f.o:
-	$(FF) -c $(XFLAGS) $(PPFLAG77) $<
+	$(FC) -c $(XFLAGS) $(PPFLAG77) $<
 
 # Remove mod rule from Modula 2 so GNU make doesn't get confused
 %.o : %.mod
