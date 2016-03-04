@@ -42,7 +42,7 @@ Namelist/aero/ topofile,month,so2_anth,so2_ship,so2_biom,oc_anth, &
 call setstacklimit(-1)
 #endif 
 
-Write(6,*) 'AEROEMISS - CMIP5 aerosols to CC grid (JUL-14)'
+Write(6,*) 'AEROEMISS - CMIP5 aerosols to CC grid (MAR-16)'
 
 ! Read switches
 nopts=1
