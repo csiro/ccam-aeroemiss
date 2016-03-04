@@ -284,7 +284,7 @@ ncstatus=nf_close(ncid)
 dataout(:,:,16)=dataout(:,:,16)/real(countt)
 
 ! Normalise to 1Tg/yr (note grid is in km)
-ssum=sum(dataout(:,:,16))
+ssum= max( sum(dataout(:,:,16)), 1.e-20 )
 dataout(:,:,16)=dataout(:,:,16)*1.E9/(86400.*365.25*ssum*grid*grid*1.E6)
 
 deallocate(coverout)
