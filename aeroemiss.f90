@@ -37,6 +37,12 @@ Namelist/aero/ topofile,month,so2_anth,so2_ship,so2_biom,oc_anth, &
                oc_ship,oc_biom,bc_anth,bc_ship,bc_biom,volcano,   &
                dmsfile,dustfile
 
+! Start banner
+write(6,*) "=================================================================================="
+write(6,*) "CCAM: Starting aeroemiss"
+write(6,*) "=================================================================================="
+
+
 #ifndef stacklimit
 ! For linux only - removes stacklimit on all processors
 call setstacklimit(-1)
@@ -76,6 +82,11 @@ fname(13)=dustfile
 Call createaero(options,nopts,fname,month)
 
 Deallocate(options)
+
+! Complete
+write(6,*) "CCAM: aeroemiss completed successfully"
+      
+call finishbanner
 
 Stop
 End
@@ -134,10 +145,24 @@ Write(6,*) '    volcano       = Volcanic emissions file'
 Write(6,*) '    dmsfile       = DMS and natural organics emission file'
 Write(6,*) '    dustfile      = Dust emission file'
 Write(6,*)
+
+call finishbanner
 Stop
 
 Return
 End
+    
+subroutine finishbanner
+
+implicit none
+
+! End banner
+write(6,*) "=================================================================================="
+write(6,*) "CCAM: Finished aeroemiss"
+write(6,*) "=================================================================================="
+
+return
+end
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! This subroutine determins the default values for the switches
@@ -155,6 +180,7 @@ Integer locate
 out=locate('-o',options(:,1),nopts)
 If (options(out,2).EQ.'') then
   Write(6,*) "ERROR: Must specify output filename"
+  call finishbanner
   stop
 End if
 

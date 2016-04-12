@@ -55,6 +55,7 @@ dataout=0.
 ncstatus=nf_open(fname(2),nf_nowrite,ncid)
 If (ncstatus/=nf_noerr) Then
   Write(6,*) "ERROR: Error opening NetCDF file ",trim(fname(2))," (",ncstatus,")"
+  call finishbanner
   Stop
 End If
 Call getncdims(ncid,ncsize)
@@ -77,12 +78,14 @@ do j=1,3 ! 1=Anth,2=Shipping,3=Biomass burning
     ncstatus=nf_open(fname(fp+1),nf_nowrite,ncid)
     If (ncstatus/=nf_noerr) Then
       Write(6,*) "ERROR: Error opening NetCDF file ",trim(fname(fp+1))," (",ncstatus,")"
+      call finishbanner
       Stop
     End If 
     write(6,*) "Processing ",trim(fname(fp+1))
     call getncdims(ncid,ncsize)
     if (ncsize(1)/=arrsize(1,2).or.ncsize(2)/=arrsize(2,2)) then
       write(6,*) "ERROR: Grid size mismatch between files"
+      call finishbanner
       stop
     end if
 
@@ -152,6 +155,7 @@ do j=1,3 ! 1=Anth,2=Shipping,3=Biomass burning
 
         case DEFAULT
           write(6,*) "ERROR: Internal error determining emission dataset"
+          call finishbanner
           stop
       end select
       
@@ -223,6 +227,7 @@ Write(6,*) "Process volcanic emissions"
 ncstatus=nf_open(fname(11),nf_nowrite,ncid)
 If (ncstatus/=nf_noerr) Then
   Write(6,*) "ERROR: Error opening NetCDF file ",trim(fname(11))," (",ncstatus,")"
+  call finishbanner
   Stop
 End If
 write(6,*) "Processing ",trim(fname(11))
@@ -298,6 +303,7 @@ Write(6,*) "Process DMS and natural organic emissions"
 ncstatus=nf_open(fname(12),nf_nowrite,ncid)
 If (ncstatus.NE.nf_noerr) Then
   Write(6,*) "ERROR: Error opening NetCDF file ",trim(fname(12))," (",ncstatus,")"
+  call finishbanner
   Stop
 End If
 write(6,*) "Processing ",trim(fname(12))
@@ -403,6 +409,7 @@ Write(6,*) "Process dust emission datasets"
 ncstatus=nf_open(fname(13),nf_nowrite,ncid)
 If (ncstatus.NE.nf_noerr) Then
   Write(6,*) "ERROR: Error opening NetCDF file ",trim(fname(13))," (",ncstatus,")"
+  call finishbanner
   Stop
 End If
 write(6,*) "Processing ",trim(fname(13))
