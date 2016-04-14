@@ -1,1 +1,1 @@
-      character(len=*), parameter :: version ='AEROEMISS r2802:2904M'
+      character(len=*), parameter :: version ='AEROEMISS r2930M'
