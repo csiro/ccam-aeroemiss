@@ -52,6 +52,12 @@ clean:
 
 stacklimit.o: stacklimit.c
 	cc -c stacklimit.c
+version.h: FORCE
+	rm -f brokenver tmpver
+	echo "      character(len=*), parameter :: version ='AEROEMISS r'" > brokenver
+	echo "      character(len=*), parameter :: version ='AEROEMISS r`svnversion .`'" > tmpver
+	grep exported tmpver || grep Unversioned tmpver || cmp tmpver brokenver || cmp tmpver version.h || mv tmpver version.h
+FORCE:
 
 .f90.o:
 	$(FC) -c $(XFLAGS) $(PPFLAG90) $<
@@ -61,7 +67,7 @@ stacklimit.o: stacklimit.c
 # Remove mod rule from Modula 2 so GNU make doesn't get confused
 %.o : %.mod
 
-aeroemiss.o : ccinterp.o
+aeroemiss.o : ccinterp.o version.h
 aeroread.o : ccinterp.o netcdf_m.o
 ccinterp.o : ccinterp.f90 setxyz_m.o xyzinfo_m.o latltoij_m.o newmpar_m.o precis_m.o
 latltoij_m.o : latltoij_m.f90 xyzinfo_m.o newmpar_m.o precis_m.o

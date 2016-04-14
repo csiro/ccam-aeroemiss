@@ -25,6 +25,8 @@ Program aeroemiss
 
 Implicit None
 
+include 'version.h'
+
 Character*80, dimension(:,:), allocatable :: options
 Character*160, dimension(13) :: fname
 Character*160 topofile,so2_anth,so2_ship,so2_biom
@@ -38,9 +40,9 @@ Namelist/aero/ topofile,month,so2_anth,so2_ship,so2_biom,oc_anth, &
                dmsfile,dustfile
 
 ! Start banner
-write(6,*) "=================================================================================="
+write(6,*) "==============================================================================="
 write(6,*) "CCAM: Starting aeroemiss"
-write(6,*) "=================================================================================="
+write(6,*) "==============================================================================="
 
 
 #ifndef stacklimit
@@ -48,7 +50,8 @@ write(6,*) "====================================================================
 call setstacklimit(-1)
 #endif 
 
-Write(6,*) 'AEROEMISS - CMIP5 aerosols to CC grid (MAR-16)'
+Write(6,*) 'AEROEMISS - CMIP5 aerosols to CC grid'
+write(6,*) version
 
 ! Read switches
 nopts=1
@@ -85,12 +88,24 @@ Deallocate(options)
 
 ! Complete
 write(6,*) "CCAM: aeroemiss completed successfully"
-      
 call finishbanner
 
 Stop
 End
 
+subroutine finishbanner
+
+implicit none
+
+! End banner
+write(6,*) "==============================================================================="
+write(6,*) "CCAM: Finished aeroemiss"
+write(6,*) "==============================================================================="
+
+return
+end
+
+    
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! This subroutine displays the help message
 !
@@ -151,18 +166,6 @@ Stop
 
 Return
 End
-    
-subroutine finishbanner
-
-implicit none
-
-! End banner
-write(6,*) "=================================================================================="
-write(6,*) "CCAM: Finished aeroemiss"
-write(6,*) "=================================================================================="
-
-return
-end
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! This subroutine determins the default values for the switches
