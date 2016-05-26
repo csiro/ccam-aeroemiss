@@ -56,7 +56,7 @@ ncstatus=nf_open(fname(2),nf_nowrite,ncid)
 If (ncstatus/=nf_noerr) Then
   Write(6,*) "ERROR: Error opening NetCDF file ",trim(fname(2))," (",ncstatus,")"
   call finishbanner
-  Stop
+  Stop -1
 End If
 Call getncdims(ncid,ncsize)
 Call getnclonlat(ncid,emlonlat)
@@ -79,14 +79,14 @@ do j=1,3 ! 1=Anth,2=Shipping,3=Biomass burning
     If (ncstatus/=nf_noerr) Then
       Write(6,*) "ERROR: Error opening NetCDF file ",trim(fname(fp+1))," (",ncstatus,")"
       call finishbanner
-      Stop
+      Stop -1
     End If 
     write(6,*) "Processing ",trim(fname(fp+1))
     call getncdims(ncid,ncsize)
     if (ncsize(1)/=arrsize(1,2).or.ncsize(2)/=arrsize(2,2)) then
       write(6,*) "ERROR: Grid size mismatch between files"
       call finishbanner
-      stop
+      stop -1
     end if
 
     ! no upper level ship emissions
@@ -156,7 +156,7 @@ do j=1,3 ! 1=Anth,2=Shipping,3=Biomass burning
         case DEFAULT
           write(6,*) "ERROR: Internal error determining emission dataset"
           call finishbanner
-          stop
+          stop -1
       end select
       
       datatmp=0.
@@ -228,7 +228,7 @@ ncstatus=nf_open(fname(11),nf_nowrite,ncid)
 If (ncstatus/=nf_noerr) Then
   Write(6,*) "ERROR: Error opening NetCDF file ",trim(fname(11))," (",ncstatus,")"
   call finishbanner
-  Stop
+  Stop -1
 End If
 write(6,*) "Processing ",trim(fname(11))
 Call getncdims(ncid,ncsize)
@@ -304,7 +304,7 @@ ncstatus=nf_open(fname(12),nf_nowrite,ncid)
 If (ncstatus.NE.nf_noerr) Then
   Write(6,*) "ERROR: Error opening NetCDF file ",trim(fname(12))," (",ncstatus,")"
   call finishbanner
-  Stop
+  Stop -1
 End If
 write(6,*) "Processing ",trim(fname(12))
 Call getncdims(ncid,ncsize)
@@ -410,7 +410,7 @@ ncstatus=nf_open(fname(13),nf_nowrite,ncid)
 If (ncstatus.NE.nf_noerr) Then
   Write(6,*) "ERROR: Error opening NetCDF file ",trim(fname(13))," (",ncstatus,")"
   call finishbanner
-  Stop
+  Stop -1
 End If
 write(6,*) "Processing ",trim(fname(13))
 Call getncdims(ncid,ncsize)

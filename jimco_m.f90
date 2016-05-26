@@ -115,7 +115,7 @@ subroutine inoct ( n1grid, nagrid, ntay, flon0, flat0, scen, ra, qa, n,  &
    n1 = ntay
    if ( 3*n1 > n ) then
       print*, "too small in inoct, choose a larger power of 2"
-      stop
+      stop -1
    end if
    m1g = n1grid ! grid intervals between center and side
    mag = nagrid ! grid intervals between center and first corner

@@ -472,7 +472,7 @@ subroutine setxyz ( il, jl, kl, npanels, ifull, iquad, diag, id, jd,        &
    if (npanels == 13) then 
       if ( ntang /= 2 ) then 
          print*, " Error - octagon requires ntang=2 "
-         stop
+         stop -1
       end if
       call jimco ( il, iquad, xx4, yy4, zz4 )
       dsfact = (3.0 + 3.0*sqrt(2.0_rx))*il/(2.0*pi)  ! con-octagon 

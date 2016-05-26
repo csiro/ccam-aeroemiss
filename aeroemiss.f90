@@ -184,7 +184,7 @@ out=locate('-o',options(:,1),nopts)
 If (options(out,2).EQ.'') then
   Write(6,*) "ERROR: Must specify output filename"
   call finishbanner
-  stop
+  stop -1
 End if
 
 Return

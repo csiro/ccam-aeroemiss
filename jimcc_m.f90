@@ -1160,7 +1160,7 @@ subroutine lufm(a, ipiv, d)
       if (ajj == 0.0) then
          jm = j - 1
          print *, "failure in lufact: matrix singular, rank=", jm
-         stop
+         stop -1
       endif
       ajji = 1.0/ajj
       do i = jp, m
@@ -1205,7 +1205,7 @@ subroutine invmm(a)
    if ( size(a, 1) /= size(a, 2) ) then
       print*, " Can't calculate inverse of non-square matrix "
       print*, " Shape is ", shape(a)
-      stop
+      stop -1
    end if
 
    m = size(a, 1)

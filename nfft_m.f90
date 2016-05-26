@@ -263,7 +263,7 @@ contains
          call get235(n, ok)
          if ( .not. ok ) then
             print*, "prime factors of n are not only 2, 3, 5"
-            stop
+            stop -1
          end if
       endif
       if ( n /= jumble(0) ) then
