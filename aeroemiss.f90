@@ -205,7 +205,7 @@ Integer, intent(in) :: nopts,month
 Character(len=*), dimension(nopts,2), intent(in) :: options
 Character(len=*), dimension(13), intent(in) :: fname
 Character*80, dimension(3) :: outputdesc
-Character*80 returnoption,outfile
+Character*1024 returnoption,outfile
 Character*47 header
 real, dimension(:,:,:), allocatable :: rlld,aerosol
 Real, dimension(:,:), allocatable :: gridout,lsdata
