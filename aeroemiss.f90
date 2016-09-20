@@ -28,11 +28,11 @@ Implicit None
 include 'version.h'
 
 Character*80, dimension(:,:), allocatable :: options
-Character*160, dimension(13) :: fname
-Character*160 topofile,so2_anth,so2_ship,so2_biom
-Character*160 oc_anth,oc_ship,oc_biom
-Character*160 bc_anth,bc_ship,bc_biom
-Character*160 volcano,dmsfile,dustfile
+Character*1024, dimension(13) :: fname
+Character*1024 topofile,so2_anth,so2_ship,so2_biom
+Character*1024 oc_anth,oc_ship,oc_biom
+Character*1024 bc_anth,bc_ship,bc_biom
+Character*1024 volcano,dmsfile,dustfile
 Integer nopts,month
 
 Namelist/aero/ topofile,month,so2_anth,so2_ship,so2_biom,oc_anth, &
@@ -203,8 +203,8 @@ Implicit None
 
 Integer, intent(in) :: nopts,month
 Character(len=*), dimension(nopts,2), intent(in) :: options
+Character(len=*), dimension(13), intent(in) :: fname
 Character*80, dimension(3) :: outputdesc
-Character*160, dimension(13) :: fname
 Character*80 returnoption,outfile
 Character*47 header
 real, dimension(:,:,:), allocatable :: rlld,aerosol
