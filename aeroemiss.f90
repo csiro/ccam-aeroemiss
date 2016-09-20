@@ -27,7 +27,7 @@ Implicit None
 
 include 'version.h'
 
-Character*80, dimension(:,:), allocatable :: options
+Character*1024, dimension(:,:), allocatable :: options
 Character*1024, dimension(13) :: fname
 Character*1024 topofile,so2_anth,so2_ship,so2_biom
 Character*1024 oc_anth,oc_ship,oc_biom
