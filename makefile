@@ -3,7 +3,10 @@
 ifneq ($(CUSTOM),yes)
 FC = ifort
 XFLAGS = -xHost -I $(NETCDF_ROOT)/include
-LIBS = -L $(NETCDF_ROOT)/lib -lnetcdf -lnetcdff
+LIBS = -L $(NETCDF_ROOT)/lib -lnetcdf
+ifneq ($(NCCLIB),yes)
+LIBS += -lnetcdff
+endif
 PPFLAG90 = -fpp
 PPFLAG77 = -fpp
 DEBUGFLAG = -check all -debug all -traceback -fpe0
@@ -33,6 +36,10 @@ endif
 # Testing - I/O and fpmodel
 ifeq ($(TEST),yes)
 XFLAGS += $(DEBUGFLAG)
+endif
+
+ifeq ($(NCCLIB),yes)
+XFLAGS += -Dncclib
 endif
 
 
