@@ -1,6 +1,6 @@
 ! Conformal Cubic Atmospheric Model
     
-! Copyright 2015 Commonwealth Scientific Industrial Research Organisation (CSIRO)
+! Copyright 2015-2019 Commonwealth Scientific Industrial Research Organisation (CSIRO)
     
 ! This file is part of the Conformal Cubic Atmospheric Model (CCAM)
 !
@@ -34,9 +34,11 @@ Integer, dimension(2), intent(in) :: sibdim
 integer, dimension(sibdim(1),sibdim(2)) :: countt
 integer, dimension(4,2) :: arrsize
 integer, dimension(4) :: ncsize
+integer, dimension(4) :: nstart, ncount
 integer, dimension(1) :: minpos
 integer ncstatus,ncid
 integer i,j,n,ix,ii,jj,fp,pos,ind,lci,lcj,nface
+integer cmipmode, valident
 Real, dimension(sibdim(1),sibdim(2),19), intent(out) :: dataout
 real, dimension(sibdim(1),sibdim(2)) :: datatmp
 Real, dimension(sibdim(1),sibdim(2)), intent(in) :: grid,lsdata
@@ -47,111 +49,216 @@ real, dimension(:), allocatable :: rlat,dis
 real aglon,aglat,alci,alcj,ssum
 character(len=*), dimension(13), intent(in) :: fname
 character*160, dimension(2) :: varname
+character*3 :: aname
 logical ltest
 
-dataout=0.
+dataout = 0.
 
 ! read size and coordinates
-ncstatus=nf_open(fname(2),nf_nowrite,ncid)
-If (ncstatus/=nf_noerr) Then
-  Write(6,*) "ERROR: Error opening NetCDF file ",trim(fname(2))," (",ncstatus,")"
-  call finishbanner
-  Stop -1
-End If
-Call getncdims(ncid,ncsize)
-Call getnclonlat(ncid,emlonlat)
-arrsize=1
-arrsize(1:2,2)=ncsize(1:2)
-arrsize(4,1)=month
-ncstatus=nf_close(ncid)
+!ncstatus = nf_open(fname(2),nf_nowrite,ncid)
+!If ( ncstatus /= nf_noerr ) Then
+!  Write(6,*) "ERROR: Error opening NetCDF file ",trim(fname(2))," (",ncstatus,")"
+!  call finishbanner
+!  Stop -1
+!End If
+!Call getncdims(ncid,ncsize)
+!Call getnclonlat(ncid,emlonlat)
+!arrsize = 1
+!arrsize(1:2,2) = ncsize(1:2)
+!arrsize(4,1) = month
+!ncstatus = nf_close(ncid)
 
-!--------------------------------------------------------------------      
-! allocate arrays    
-allocate(coverout(arrsize(1,2),arrsize(2,2)),tmpout(arrsize(1,2),arrsize(2,2)))
 
 Write(6,*) 'Process CMIP5 aerosol datasets'
-do j=1,3 ! 1=Anth,2=Shipping,3=Biomass burning
-  do n=1,3 ! 1=SO2,BC,OC
-
+do j = 1,3 ! 1=Anth,2=Shipping,3=Biomass burning
+  do n = 1,3 ! 1=SO2,BC,OC
+      
     ! read emission array
-    fp=(j-1)*3+n
-    ncstatus=nf_open(fname(fp+1),nf_nowrite,ncid)
-    If (ncstatus/=nf_noerr) Then
+    fp = (j-1)*3 + n
+    ncstatus = nf_open(fname(fp+1),nf_nowrite,ncid)
+    If ( ncstatus/=nf_noerr ) Then
       Write(6,*) "ERROR: Error opening NetCDF file ",trim(fname(fp+1))," (",ncstatus,")"
       call finishbanner
       Stop -1
     End If 
     write(6,*) "Processing ",trim(fname(fp+1))
     call getncdims(ncid,ncsize)
-    if (ncsize(1)/=arrsize(1,2).or.ncsize(2)/=arrsize(2,2)) then
-      write(6,*) "ERROR: Grid size mismatch between files"
-      call finishbanner
-      stop -1
+    Call getnclonlat(ncid,emlonlat)
+    arrsize = 1
+    arrsize(1:2,2) = ncsize(1:2)
+    arrsize(4,1) = month
+    if ( allocated( coverout ) ) then
+      deallocate( coverout, tmpout )  
     end if
+    allocate( coverout(arrsize(1,2),arrsize(2,2)), tmpout(arrsize(1,2),arrsize(2,2)) )
 
+    ! check for sector
+    cmipmode = 5
+    ncstatus = nf_inq_varid(ncid,'sector',valident)
+    if ( ncstatus==nf_noerr ) then
+      cmipmode = 6
+    end if
+    !write(6,*) "cmipmode ",cmipmode
+
+    aname='ERR'
+    select case(n)
+      case(1)
+        aname = "SO2"
+      case(2)
+        aname = "BC"
+      case(3)
+        aname = "OC"
+    end select
+    
     ! no upper level ship emissions
-    if (j==2) then
-      ix=1
+    if ( j==2 ) then
+      ix = 1
     else
-      ix=2
+      ix = 2
     end if
+    
+    do i = 1,ix  ! 1=Level1,2=Upper level
 
-    do i=1,ix  ! 1=Level1,2=Upper level
+      coverout = 0.
 
-      coverout=0.
-
-      pos=(j-1)*6+(n-1)*2+i
+      pos = (j-1)*6 + (n-1)*2 + i
       select case(pos)
         case(1,3,5) ! SO2,BC,OC Anth Level1
-          varname(1)='emiss_awb'
-          varname(2)='kg m-2 s-1'
-          Call getmeta(ncid,varname,tmpout,arrsize)
-          coverout=coverout+tmpout
-          varname(1)='emiss_dom'
-          varname(2)='kg m-2 s-1'
-          Call getmeta(ncid,varname,tmpout,arrsize)
-          coverout=coverout+tmpout
-          varname(1)='emiss_tra'
-          varname(2)='kg m-2 s-1'
-          Call getmeta(ncid,varname,tmpout,arrsize)
-          coverout=coverout+tmpout
-          varname(1)='emiss_wst'
-          varname(2)='kg m-2 s-1'
-          Call getmeta(ncid,varname,tmpout,arrsize)
-          coverout=coverout+tmpout
-          ind=(n-1)*2+1
+          if ( cmipmode==6 ) then
+            nstart(1) = 1
+            nstart(2) = 1
+            nstart(4) = month
+            ncount(1) = arrsize(1,2)
+            ncount(2) = arrsize(2,2)
+            ncount(3) = 1
+            ncount(4) = 1
+            nstart(3) = 1 ! sector=0 (Agriculture)
+            ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_anthro',valident)
+            ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
+            coverout = coverout + tmpout
+            nstart(3) = 5 ! sector=4 (Residential/Commercial)
+            ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_anthro',valident)
+            ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
+            coverout = coverout + tmpout
+            nstart(3) = 4 ! sector=3 (Transport)
+            ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_anthro',valident)
+            ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
+            coverout = coverout + tmpout
+            nstart(3) = 8 ! sector=7 (Waste)
+            ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_anthro',valident)
+            ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
+            coverout = coverout + tmpout
+          else    
+            varname(1)='emiss_awb'
+            varname(2)='kg m-2 s-1'
+            Call getmeta(ncid,varname,tmpout,arrsize)
+            coverout=coverout+tmpout
+            varname(1)='emiss_dom'
+            varname(2)='kg m-2 s-1'
+            Call getmeta(ncid,varname,tmpout,arrsize)
+            coverout=coverout+tmpout
+            varname(1)='emiss_tra'
+            varname(2)='kg m-2 s-1'
+            Call getmeta(ncid,varname,tmpout,arrsize)
+            coverout=coverout+tmpout
+            varname(1)='emiss_wst'
+            varname(2)='kg m-2 s-1'
+            Call getmeta(ncid,varname,tmpout,arrsize)
+            coverout=coverout+tmpout
+          end if  
+          ind = (n-1)*2 + 1 ! 1=so2a1,3=bca1,5=oca1
 
         case(2,4,6) ! SO2,BC,OC Anth Upper level
-          varname(1)='emiss_ene'
-          varname(2)='kg m-2 s-1'
-          Call getmeta(ncid,varname,tmpout,arrsize)
-          coverout=coverout+tmpout
-          varname(1)='emiss_ind'
-          varname(2)='kg m-2 s-1'
-          Call getmeta(ncid,varname,tmpout,arrsize)
-          coverout=coverout+tmpout
-          ind=n*2
+          if ( cmipmode==6 ) then
+            nstart(1) = 1
+            nstart(2) = 1
+            nstart(4) = month
+            ncount(1) = arrsize(1,2)
+            ncount(2) = arrsize(2,2)
+            ncount(3) = 1
+            ncount(4) = 1
+            nstart(3) = 2 ! sector=1 (Energy)
+            ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_anthro',valident)
+            ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
+            coverout = coverout + tmpout
+            nstart(3) = 3 ! sector=2 (Industry)
+            ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_anthro',valident)
+            ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
+            coverout = coverout + tmpout
+          else    
+            varname(1)='emiss_ene'
+            varname(2)='kg m-2 s-1'
+            Call getmeta(ncid,varname,tmpout,arrsize)
+            coverout=coverout+tmpout
+            varname(1)='emiss_ind'
+            varname(2)='kg m-2 s-1'
+            Call getmeta(ncid,varname,tmpout,arrsize)
+            coverout=coverout+tmpout
+          end if  
+          ind = n*2 ! 2=so2a2,4=bca2,6=oca2
 
         case(7,9,11) ! SO2,BC,OC Ship Level1
-          varname(1)='emiss_shp'
-          varname(2)='kg m-2 s-1'
-          Call getmeta(ncid,varname,tmpout,arrsize)
-          coverout=coverout+tmpout
-          ind=(n-1)*2+1
+          if ( cmipmode==6 ) then
+            nstart(1) = 1
+            nstart(2) = 1
+            nstart(4) = month
+            ncount(1) = arrsize(1,2)
+            ncount(2) = arrsize(2,2)
+            ncount(3) = 1
+            ncount(4) = 1
+            nstart(3) = 8 ! sector=7 (Ship)
+            ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_anthro',valident)
+            ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
+            coverout = coverout + tmpout
+          else    
+            varname(1)='emiss_shp'
+            varname(2)='kg m-2 s-1'
+            Call getmeta(ncid,varname,tmpout,arrsize)
+            coverout=coverout+tmpout
+          end if  
+          ind = (n-1)*2 + 1 ! 1=so2a1,3=bca1,5=oca1
 
         case(13,15,17) ! SO2,BC,OC Biomass burning level1
-          varname(1)='grassfire'
-          varname(2)='kg m-2 s-1'
-          Call getmeta(ncid,varname,tmpout,arrsize)
-          coverout=coverout+tmpout
-          ind=(n-1)*2+7        
+          if ( cmipmode==6 ) then
+            nstart(1) = 1
+            nstart(2) = 1
+            nstart(4) = month
+            ncount(1) = arrsize(1,2)
+            ncount(2) = arrsize(2,2)
+            ncount(3) = 1
+            ncount(4) = 1
+            nstart(3) = 3 ! sector=2 (Grassland)
+            ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_openburning',valident)
+            ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
+            coverout = coverout + tmpout
+          else
+            varname(1)='grassfire'
+            varname(2)='kg m-2 s-1'
+            Call getmeta(ncid,varname,tmpout,arrsize)
+            coverout=coverout+tmpout
+          end if  
+          ind = (n-1)*2 + 7 ! 7=so2b1,9=bcb1,11=ocb1       
 
         case(14,16,18) ! SO2,BC,OC Biomass burning upper level
-          varname(1)='forestfire'
-          varname(2)='kg m-2 s-1'
-          Call getmeta(ncid,varname,tmpout,arrsize)
-          coverout=coverout+tmpout
-          ind=(n-1)*2+8
+          if ( cmipmode==6 ) then
+            nstart(1) = 1
+            nstart(2) = 1
+            nstart(4) = month
+            ncount(1) = arrsize(1,2)
+            ncount(2) = arrsize(2,2)
+            ncount(3) = 1
+            ncount(4) = 1
+            nstart(3) = 2 ! sector=1 (Forest)
+            ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_openburning',valident)
+            ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
+            coverout = coverout + tmpout
+          else    
+            varname(1)='forestfire'
+            varname(2)='kg m-2 s-1'
+            Call getmeta(ncid,varname,tmpout,arrsize)
+            coverout=coverout+tmpout
+          end if  
+          ind = (n-1)*2 + 8 ! 8=so2b2,10=bcb2,12=ocb2
 
         case DEFAULT
           write(6,*) "ERROR: Internal error determining emission dataset"
@@ -201,10 +308,10 @@ do j=1,3 ! 1=Anth,2=Shipping,3=Biomass burning
           end if
         end do
       end do
-      
+
       ! add to other emissions
       dataout(:,:,ind)=dataout(:,:,ind)+datatmp/real(countt)
-      
+
     end do
 
     ! close nc file
@@ -501,3 +608,5 @@ Write(6,*) "Task complete"
 
 Return
 End
+
+    
