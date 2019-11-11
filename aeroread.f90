@@ -135,36 +135,52 @@ do j = 1,3 ! 1=Anth,2=Shipping,3=Biomass burning
             nstart(3) = 1 ! sector=0 (Agriculture)
             ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_anthro',valident)
             ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
-            coverout = coverout + tmpout
+            where ( tmpout<1.e20)
+              coverout = coverout + tmpout
+            end where  
             nstart(3) = 5 ! sector=4 (Residential/Commercial)
             ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_anthro',valident)
             ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
-            coverout = coverout + tmpout
+            where ( tmpout<1.e20)
+              coverout = coverout + tmpout
+            end where  
             nstart(3) = 4 ! sector=3 (Transport)
             ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_anthro',valident)
             ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
-            coverout = coverout + tmpout
+            where ( tmpout<1.e20)
+              coverout = coverout + tmpout
+            end where  
             nstart(3) = 8 ! sector=7 (Waste)
             ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_anthro',valident)
             ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
-            coverout = coverout + tmpout
+            where ( tmpout<1.e20)
+              coverout = coverout + tmpout
+            end where  
           else    
             varname(1)='emiss_awb'
             varname(2)='kg m-2 s-1'
             Call getmeta(ncid,varname,tmpout,arrsize)
-            coverout=coverout+tmpout
+            where ( tmpout<1.e20)
+              coverout = coverout + tmpout
+            end where  
             varname(1)='emiss_dom'
             varname(2)='kg m-2 s-1'
             Call getmeta(ncid,varname,tmpout,arrsize)
-            coverout=coverout+tmpout
+            where ( tmpout<1.e20)
+              coverout = coverout + tmpout
+            end where  
             varname(1)='emiss_tra'
             varname(2)='kg m-2 s-1'
             Call getmeta(ncid,varname,tmpout,arrsize)
-            coverout=coverout+tmpout
+            where ( tmpout<1.e20)
+              coverout = coverout + tmpout
+            end where  
             varname(1)='emiss_wst'
             varname(2)='kg m-2 s-1'
             Call getmeta(ncid,varname,tmpout,arrsize)
-            coverout=coverout+tmpout
+            where ( tmpout<1.e20)
+              coverout = coverout + tmpout
+            end where  
           end if  
           ind = (n-1)*2 + 1 ! 1=so2a1,3=bca1,5=oca1
 
@@ -180,20 +196,28 @@ do j = 1,3 ! 1=Anth,2=Shipping,3=Biomass burning
             nstart(3) = 2 ! sector=1 (Energy)
             ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_anthro',valident)
             ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
-            coverout = coverout + tmpout
+            where ( tmpout<1.e20)
+              coverout = coverout + tmpout
+            end where  
             nstart(3) = 3 ! sector=2 (Industry)
             ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_anthro',valident)
             ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
-            coverout = coverout + tmpout
+            where ( tmpout<1.e20)
+              coverout = coverout + tmpout
+            end where  
           else    
             varname(1)='emiss_ene'
             varname(2)='kg m-2 s-1'
             Call getmeta(ncid,varname,tmpout,arrsize)
-            coverout=coverout+tmpout
+            where ( tmpout<1.e20)
+              coverout = coverout + tmpout
+            end where  
             varname(1)='emiss_ind'
             varname(2)='kg m-2 s-1'
             Call getmeta(ncid,varname,tmpout,arrsize)
-            coverout=coverout+tmpout
+            where ( tmpout<1.e20)
+              coverout = coverout + tmpout
+            end where  
           end if  
           ind = n*2 ! 2=so2a2,4=bca2,6=oca2
 
@@ -209,12 +233,16 @@ do j = 1,3 ! 1=Anth,2=Shipping,3=Biomass burning
             nstart(3) = 8 ! sector=7 (Ship)
             ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_anthro',valident)
             ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
-            coverout = coverout + tmpout
+            where ( tmpout<1.e20)
+              coverout = coverout + tmpout
+            end where  
           else    
             varname(1)='emiss_shp'
             varname(2)='kg m-2 s-1'
             Call getmeta(ncid,varname,tmpout,arrsize)
-            coverout=coverout+tmpout
+            where ( tmpout<1.e20)
+              coverout = coverout + tmpout
+            end where  
           end if  
           ind = (n-1)*2 + 1 ! 1=so2a1,3=bca1,5=oca1
 
@@ -230,12 +258,16 @@ do j = 1,3 ! 1=Anth,2=Shipping,3=Biomass burning
             nstart(3) = 3 ! sector=2 (Grassland)
             ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_openburning',valident)
             ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
-            coverout = coverout + tmpout
+            where ( tmpout<1.e20)
+              coverout = coverout + tmpout
+            end where  
           else
             varname(1)='grassfire'
             varname(2)='kg m-2 s-1'
             Call getmeta(ncid,varname,tmpout,arrsize)
-            coverout=coverout+tmpout
+            where ( tmpout<1.e20)
+              coverout = coverout + tmpout
+            end where  
           end if  
           ind = (n-1)*2 + 7 ! 7=so2b1,9=bcb1,11=ocb1       
 
@@ -251,12 +283,16 @@ do j = 1,3 ! 1=Anth,2=Shipping,3=Biomass burning
             nstart(3) = 2 ! sector=1 (Forest)
             ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_openburning',valident)
             ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
-            coverout = coverout + tmpout
+            where ( tmpout<1.e20)
+              coverout = coverout + tmpout
+            end where  
           else    
             varname(1)='forestfire'
             varname(2)='kg m-2 s-1'
             Call getmeta(ncid,varname,tmpout,arrsize)
-            coverout=coverout+tmpout
+            where ( tmpout<1.e20)
+              coverout = coverout + tmpout
+            end where  
           end if  
           ind = (n-1)*2 + 8 ! 8=so2b2,10=bcb2,12=ocb2
 
