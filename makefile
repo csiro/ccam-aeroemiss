@@ -2,7 +2,7 @@
 # Intel compiler options
 ifneq ($(CUSTOM),yes)
 FC = ifort
-XFLAGS = -xHost -I $(NETCDF_ROOT)/include
+XFLAGS = -qopenmp -xHost -I $(NETCDF_ROOT)/include
 LIBS = -L $(NETCDF_ROOT)/lib -lnetcdf
 ifneq ($(NCCLIB),yes)
 LIBS += -lnetcdff

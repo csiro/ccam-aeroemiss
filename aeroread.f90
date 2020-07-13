@@ -1,6 +1,6 @@
 ! Conformal Cubic Atmospheric Model
     
-! Copyright 2015-2019 Commonwealth Scientific Industrial Research Organisation (CSIRO)
+! Copyright 2015-2020 Commonwealth Scientific Industrial Research Organisation (CSIRO)
     
 ! This file is part of the Conformal Cubic Atmospheric Model (CCAM)
 !
@@ -36,6 +36,7 @@ integer, dimension(4,2) :: arrsize
 integer, dimension(4) :: ncsize
 integer, dimension(4) :: nstart, ncount
 integer, dimension(1) :: minpos
+integer, dimension(:,:,:), allocatable :: lcmap
 integer ncstatus,ncid
 integer i,j,n,ix,ii,jj,fp,pos,ind,lci,lcj,nface
 integer cmipmode, valident
@@ -88,9 +89,11 @@ do j = 1,3 ! 1=Anth,2=Shipping,3=Biomass burning
     arrsize(1:2,2) = ncsize(1:2)
     arrsize(4,1) = month
     if ( allocated( coverout ) ) then
-      deallocate( coverout, tmpout )  
+      deallocate( coverout, tmpout ) 
+      deallocate( lcmap )
     end if
     allocate( coverout(arrsize(1,2),arrsize(2,2)), tmpout(arrsize(1,2),arrsize(2,2)) )
+    allocate( lcmap(arrsize(1,2),arrsize(2,2),2) )
 
     ! check for sector
     cmipmode = 5
@@ -306,15 +309,24 @@ do j = 1,3 ! 1=Anth,2=Shipping,3=Biomass burning
       countt=0
       
       ! bin tracer
+!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(NONE) SHARED(arrsize,emlonlat,sibdim,lcmap) PRIVATE(jj,aglat,ii,aglon,alci,alcj,nface,lci,lcj)              
       do jj=1,arrsize(2,2)
         aglat=(emlonlat(2,2)-emlonlat(2,1))*real(jj-1)/real(arrsize(2,2)-1)+emlonlat(2,1)
-        do ii=1,arrsize(1,2)
+        do ii=1,arrsize(1,2)          
           aglon=(emlonlat(1,2)-emlonlat(1,1))*real(ii-1)/real(arrsize(1,2)-1)+emlonlat(1,1)
-          ! find cc grid point
-          Call lltoijmod(aglon,aglat,alci,alcj,nface)
+          call lltoijmod(aglon,aglat,alci,alcj,nface)
           lci = nint(alci)
           lcj = nint(alcj)
           lcj = lcj+nface*sibdim(1)
+          lcmap(ii,jj,1) = lci
+          lcmap(ii,jj,2) = lcj
+        end do
+      end do
+!$OMP END PARALLEL DO
+      do jj=1,arrsize(2,2)
+        do ii=1,arrsize(1,2)
+          lci = lcmap(ii,jj,1)
+          lcj = lcmap(ii,jj,2)
           ! bin emission
           if ((nint(lsdata(lci,lcj))==1.and.j/=2).or. &
               (nint(lsdata(lci,lcj))==0.and.j==2)) then
@@ -325,6 +337,7 @@ do j = 1,3 ! 1=Anth,2=Shipping,3=Biomass burning
       end do
   
       ! fill missing values
+!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(NONE) SHARED(sibdim,countt,lsdata,j,rlld,emlonlat,arrsize,datatmp,coverout) PRIVATE(lci,lcj,aglon,aglat,ii,jj)
       do lcj=1,sibdim(2)
         do lci=1,sibdim(1)
           if (countt(lci,lcj)==0) then
@@ -344,6 +357,7 @@ do j = 1,3 ! 1=Anth,2=Shipping,3=Biomass burning
           end if
         end do
       end do
+!$OMP END PARALLEL DO
 
       ! add to other emissions
       dataout(:,:,ind)=dataout(:,:,ind)+datatmp/real(countt)
@@ -363,6 +377,7 @@ dataout(:,:,7)=0.5*dataout(:,:,7)
 dataout(:,:,8)=0.5*dataout(:,:,8)
 
 deallocate(coverout,tmpout)
+deallocate(lcmap)
 
 !--------------------------------------------------------------------
 ! volcanic emissions
@@ -381,6 +396,7 @@ arrsize(1:2,2)=ncsize(1:2)
 arrsize(4,1)=1
 
 allocate(coverout(arrsize(1,2),arrsize(2,2)))
+allocate(lcmap(arrsize(1,2),arrsize(2,2),2))
 coverout=0.
 countt=0
 
@@ -389,15 +405,24 @@ varname(2)='kg/yr'
 Call getmeta(ncid,varname,coverout,arrsize)
 
 ! bin tracer
+!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(NONE) SHARED(arrsize,emlonlat,sibdim,lcmap) PRIVATE(jj,aglat,ii,aglon,alci,alcj,nface,lci,lcj)              
 do jj=1,arrsize(2,2)
   aglat=(emlonlat(2,2)-emlonlat(2,1))*real(jj-1)/real(arrsize(2,2)-1)+emlonlat(2,1)
-  do ii=1,arrsize(1,2)
+  do ii=1,arrsize(1,2)          
     aglon=(emlonlat(1,2)-emlonlat(1,1))*real(ii-1)/real(arrsize(1,2)-1)+emlonlat(1,1)
-    ! find cc grid point
-    Call lltoijmod(aglon,aglat,alci,alcj,nface)
+    call lltoijmod(aglon,aglat,alci,alcj,nface)
     lci = nint(alci)
     lcj = nint(alcj)
     lcj = lcj+nface*sibdim(1)
+    lcmap(ii,jj,1) = lci
+    lcmap(ii,jj,2) = lcj
+  end do
+end do
+!$OMP END PARALLEL DO
+do jj=1,arrsize(2,2)
+  do ii=1,arrsize(1,2)
+    lci = lcmap(ii,jj,1)
+    lcj = lcmap(ii,jj,2)
     ! bin emission
     if (nint(lsdata(lci,lcj))==1) then
       dataout(lci,lcj,16)=dataout(lci,lcj,16)+coverout(ii,jj)
@@ -407,6 +432,7 @@ do jj=1,arrsize(2,2)
 end do
   
 ! fill missing values
+!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(NONE) SHARED(sibdim,countt,lsdata,rlld,emlonlat,arrsize,dataout,coverout) PRIVATE(lci,lcj,aglon,aglat,ii,jj)
 do lcj=1,sibdim(2)
   do lci=1,sibdim(1)
     if (countt(lci,lcj)==0) then
@@ -425,6 +451,7 @@ do lcj=1,sibdim(2)
     end if
   end do
 end do
+!$OMP END PARALLEL DO
 
 ncstatus=nf_close(ncid)
       
@@ -438,6 +465,7 @@ if ( ssum>0. ) then
 end if
 
 deallocate(coverout)
+deallocate(lcmap)
 
 !--------------------------------------------------------------------
 ! process DMS and natural organic emissions
@@ -455,6 +483,7 @@ Call getnclonlat(ncid,emlonlat)
 
 allocate(coverout(ncsize(1),ncsize(2)))
 allocate(rlat(ncsize(2)),dis(ncsize(2)))
+allocate(lcmap(ncsize(1),ncsize(2),2))
 coverout=0.
 
 arrsize=1
@@ -487,15 +516,24 @@ do n=1,3
   countt=0
 
   ! bin tracer
+!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(NONE) SHARED(arrsize,emlonlat,sibdim,lcmap) PRIVATE(jj,aglat,ii,aglon,alci,alcj,nface,lci,lcj)              
   do jj=1,arrsize(2,2)
-    aglat=rlat(jj)
-    do ii=1,arrsize(1,2)
+    aglat=(emlonlat(2,2)-emlonlat(2,1))*real(jj-1)/real(arrsize(2,2)-1)+emlonlat(2,1)
+    do ii=1,arrsize(1,2)          
       aglon=(emlonlat(1,2)-emlonlat(1,1))*real(ii-1)/real(arrsize(1,2)-1)+emlonlat(1,1)
-      ! find cc grid point
-      Call lltoijmod(aglon,aglat,alci,alcj,nface)
+      call lltoijmod(aglon,aglat,alci,alcj,nface)
       lci = nint(alci)
       lcj = nint(alcj)
       lcj = lcj+nface*sibdim(1)
+      lcmap(ii,jj,1) = lci
+      lcmap(ii,jj,2) = lcj
+    end do
+  end do
+!$OMP END PARALLEL DO
+  do jj=1,arrsize(2,2)
+    do ii=1,arrsize(1,2)
+      lci = lcmap(ii,jj,1)
+      lcj = lcmap(ii,jj,2)
       ! bin emission
       select case(n)
         case(1)
@@ -527,6 +565,7 @@ do n=1,3
           if (aglon>emlonlat(1,1)+360.) aglon=aglon-360.
           ii=nint((aglon-emlonlat(1,1))*real(arrsize(1,2)-1)/(emlonlat(1,2)-emlonlat(1,1)))+1
           if (ii>arrsize(1,2)) ii=ii-arrsize(1,2)
+          ! non-uniform spacing for rlat?
           dis=(rlat-aglat)**2
           minpos=minloc(dis)
           jj=minpos(1)
@@ -544,6 +583,7 @@ end do
 ncstatus=nf_close(ncid)
       
 deallocate(coverout,rlat,dis)
+deallocate(lcmap)
 
 !--------------------------------------------------------------------
 ! process Sand, Silt and Clay fraction that can erode for dust emissions
@@ -561,6 +601,7 @@ Call getnclonlat(ncid,emlonlat)
 
 allocate(coverout(ncsize(1),ncsize(2)))
 allocate(rlat(ncsize(2)),dis(ncsize(2)))
+allocate(lcmap(ncsize(1),ncsize(2),2))
 coverout=0.
 
 arrsize=1
@@ -594,15 +635,24 @@ do n=1,3
   countt=0
 
   ! bin tracer
+!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(NONE) SHARED(arrsize,emlonlat,sibdim,lcmap) PRIVATE(jj,aglat,ii,aglon,alci,alcj,nface,lci,lcj)              
   do jj=1,arrsize(2,2)
-    aglat=rlat(jj)
-    do ii=1,arrsize(1,2)
+    aglat=(emlonlat(2,2)-emlonlat(2,1))*real(jj-1)/real(arrsize(2,2)-1)+emlonlat(2,1)
+    do ii=1,arrsize(1,2)          
       aglon=(emlonlat(1,2)-emlonlat(1,1))*real(ii-1)/real(arrsize(1,2)-1)+emlonlat(1,1)
-      ! find cc grid point
-      Call lltoijmod(aglon,aglat,alci,alcj,nface)
+      call lltoijmod(aglon,aglat,alci,alcj,nface)
       lci = nint(alci)
       lcj = nint(alcj)
       lcj = lcj+nface*sibdim(1)
+      lcmap(ii,jj,1) = lci
+      lcmap(ii,jj,2) = lcj
+    end do
+  end do
+!$OMP END PARALLEL DO
+  do jj=1,arrsize(2,2)
+    do ii=1,arrsize(1,2)
+      lci = lcmap(ii,jj,1)
+      lcj = lcmap(ii,jj,2)
       ! bin emission
       if (nint(lsdata(lci,lcj))==1) then
         dataout(lci,lcj,16+n)=dataout(lci,lcj,16+n)+coverout(ii,jj)
@@ -639,6 +689,7 @@ end do
 ncstatus=nf_close(ncid)
       
 deallocate(coverout,rlat,dis)
+deallocate(lcmap)
 
 Write(6,*) "Task complete"
 

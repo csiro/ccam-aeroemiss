@@ -50,7 +50,7 @@ write(6,*) "====================================================================
 call setstacklimit(-1)
 #endif 
 
-Write(6,*) 'AEROEMISS - CMIP5 aerosols to CC grid'
+Write(6,*) 'AEROEMISS - CMIP aerosols to CC grid'
 write(6,*) version
 
 ! Read switches
