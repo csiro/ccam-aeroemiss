@@ -32,7 +32,7 @@ PPFLAG77 = -eZ
 DEBUGFLAG =
 endif
 
-ifneq ($(MAUI),yes)
+ifeq ($(MAUI),yes)
 FC = ftn
 XFLAGS = -xHost -I $(NETCDF_ROOT)/include
 LIBS = -L $(NETCDF_ROOT)/lib -lnetcdf -lnetcdff
