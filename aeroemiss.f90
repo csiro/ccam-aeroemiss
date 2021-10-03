@@ -1,6 +1,6 @@
 ! Conformal Cubic Atmospheric Model
     
-! Copyright 2015 Commonwealth Scientific Industrial Research Organisation (CSIRO)
+! Copyright 2015-2021 Commonwealth Scientific Industrial Research Organisation (CSIRO)
     
 ! This file is part of the Conformal Cubic Atmospheric Model (CCAM)
 !
@@ -21,7 +21,7 @@
 
 Program aeroemiss
 
-! This code creates CCAM aerosol emission data using the CMIP5 datasets
+! This code creates CCAM aerosol emission data using the CMIP5 and CMIP6 datasets
 
 Implicit None
 
@@ -123,7 +123,7 @@ Write(6,*) "  -o aero      Aerosol emissions output filename"
 Write(6,*) "  aero.nml     Namelist file (see below)"
 Write(6,*)
 Write(6,*) "Namelist:"
-Write(6,*) "  The namelist aero.nml specifies the CMIP5 files to"
+Write(6,*) "  The namelist aero.nml specifies the CMIP files to"
 Write(6,*) "  use for emission data.  The following example"
 Write(6,*) "  illustrates the namelist syntax:"
 Write(6,*)
@@ -238,7 +238,7 @@ lsdata=1.-lsdata
 ! Determine lat/lon to CC mapping
 Call ccgetgrid(rlld,gridout,sibdim,lonlat,schmidt,ds)
 
-! Read CMIP5 aerosol data
+! Read CMIP aerosol data
 Call getdata(aerosol,gridout,lsdata,rlld,sibdim,fname,month)
 
 Deallocate(gridout,rlld,lsdata)

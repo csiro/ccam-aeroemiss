@@ -1,6 +1,6 @@
 ! Conformal Cubic Atmospheric Model
     
-! Copyright 2015-2020 Commonwealth Scientific Industrial Research Organisation (CSIRO)
+! Copyright 2015-2021 Commonwealth Scientific Industrial Research Organisation (CSIRO)
     
 ! This file is part of the Conformal Cubic Atmospheric Model (CCAM)
 !
@@ -19,7 +19,7 @@
 
 !------------------------------------------------------------------------------
     
-! This subroutine is to extract (in memory) data from the CMIP5 aerosol dataset.
+! This subroutine is to extract (in memory) data from the CMIP aerosol dataset.
 !
 
 Subroutine getdata(dataout,grid,lsdata,rlld,sibdim,fname,month)
@@ -70,7 +70,7 @@ dataout = 0.
 !ncstatus = nf_close(ncid)
 
 
-Write(6,*) 'Process CMIP5 aerosol datasets'
+Write(6,*) 'Process CMIP aerosol datasets'
 do j = 1,3 ! 1=Anth,2=Shipping,3=Biomass burning
   do n = 1,3 ! 1=SO2,BC,OC
       
@@ -101,7 +101,6 @@ do j = 1,3 ! 1=Anth,2=Shipping,3=Biomass burning
     if ( ncstatus==nf_noerr ) then
       cmipmode = 6
     end if
-    !write(6,*) "cmipmode ",cmipmode
 
     aname='ERR'
     select case(n)
