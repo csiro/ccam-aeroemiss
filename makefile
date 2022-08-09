@@ -1,5 +1,3 @@
-NETCDF_ROOT = /opt/cray/pe/netcdf/4.8.1.1/bin/
-
 # Intel compiler options
 ifneq ($(CUSTOM),yes)
 FC = ifort
