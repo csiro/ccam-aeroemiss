@@ -309,7 +309,8 @@ do j = 1,3 ! 1=Anth,2=Shipping,3=Biomass burning
       countt=0
       
       ! bin tracer
-!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(NONE) SHARED(arrsize,emlonlat,sibdim,lcmap) PRIVATE(jj,aglat,ii,aglon,alci,alcj,nface,lci,lcj)              
+!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(NONE) SHARED(arrsize,emlonlat,sibdim,lcmap) &
+!$OMP   PRIVATE(jj,aglat,ii,aglon,alci,alcj,nface,lci,lcj)              
       do jj=1,arrsize(2,2)
         aglat=(emlonlat(2,2)-emlonlat(2,1))*real(jj-1)/real(arrsize(2,2)-1)+emlonlat(2,1)
         do ii=1,arrsize(1,2)          
@@ -337,7 +338,8 @@ do j = 1,3 ! 1=Anth,2=Shipping,3=Biomass burning
       end do
   
       ! fill missing values
-!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(NONE) SHARED(sibdim,countt,lsdata,j,rlld,emlonlat,arrsize,datatmp,coverout) PRIVATE(lci,lcj,aglon,aglat,ii,jj)
+!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(NONE) SHARED(sibdim,countt,lsdata,j,rlld,emlonlat,arrsize,datatmp,coverout) &
+!$OMP   PRIVATE(lci,lcj,aglon,aglat,ii,jj)
       do lcj=1,sibdim(2)
         do lci=1,sibdim(1)
           if (countt(lci,lcj)==0) then
@@ -405,7 +407,8 @@ varname(2)='kg/yr'
 Call getmeta(ncid,varname,coverout,arrsize)
 
 ! bin tracer
-!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(NONE) SHARED(arrsize,emlonlat,sibdim,lcmap) PRIVATE(jj,aglat,ii,aglon,alci,alcj,nface,lci,lcj)              
+!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(NONE) SHARED(arrsize,emlonlat,sibdim,lcmap) &
+!$OMP   PRIVATE(jj,aglat,ii,aglon,alci,alcj,nface,lci,lcj)              
 do jj=1,arrsize(2,2)
   aglat=(emlonlat(2,2)-emlonlat(2,1))*real(jj-1)/real(arrsize(2,2)-1)+emlonlat(2,1)
   do ii=1,arrsize(1,2)          
@@ -432,7 +435,8 @@ do jj=1,arrsize(2,2)
 end do
   
 ! fill missing values
-!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(NONE) SHARED(sibdim,countt,lsdata,rlld,emlonlat,arrsize,dataout,coverout) PRIVATE(lci,lcj,aglon,aglat,ii,jj)
+!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(NONE) SHARED(sibdim,countt,lsdata,rlld,emlonlat,arrsize,dataout,coverout) &
+!$OMP   PRIVATE(lci,lcj,aglon,aglat,ii,jj)
 do lcj=1,sibdim(2)
   do lci=1,sibdim(1)
     if (countt(lci,lcj)==0) then
@@ -516,7 +520,8 @@ do n=1,3
   countt=0
 
   ! bin tracer
-!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(NONE) SHARED(arrsize,emlonlat,sibdim,lcmap) PRIVATE(jj,aglat,ii,aglon,alci,alcj,nface,lci,lcj)              
+!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(NONE) SHARED(arrsize,emlonlat,sibdim,lcmap) &
+!$OMP   PRIVATE(jj,aglat,ii,aglon,alci,alcj,nface,lci,lcj)              
   do jj=1,arrsize(2,2)
     aglat=(emlonlat(2,2)-emlonlat(2,1))*real(jj-1)/real(arrsize(2,2)-1)+emlonlat(2,1)
     do ii=1,arrsize(1,2)          
@@ -635,7 +640,8 @@ do n=1,3
   countt=0
 
   ! bin tracer
-!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(NONE) SHARED(arrsize,emlonlat,sibdim,lcmap) PRIVATE(jj,aglat,ii,aglon,alci,alcj,nface,lci,lcj)              
+!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(NONE) SHARED(arrsize,emlonlat,sibdim,lcmap) &
+!$OMP   PRIVATE(jj,aglat,ii,aglon,alci,alcj,nface,lci,lcj)              
   do jj=1,arrsize(2,2)
     aglat=(emlonlat(2,2)-emlonlat(2,1))*real(jj-1)/real(arrsize(2,2)-1)+emlonlat(2,1)
     do ii=1,arrsize(1,2)          

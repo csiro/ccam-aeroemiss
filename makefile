@@ -34,7 +34,7 @@ endif
 # Setonix
 ifeq ($(SETONIX),yes)
 FC = ftn
-XFLAGS = -O2 -mtune=native -march=native -I $(NETCDF_ROOT)/include -Dncclib
+XFLAGS = -O2 -mtune=native -march=native -Dncclib -fallow-argument-mismatch -fopenmp
 PPFLAG90 = -x f95-cpp-input
 PPFLAG77 = -x f77-cpp-input
 DEBUGFLAG = -g -Wall -Wextra -fbounds-check -fbacktrace
