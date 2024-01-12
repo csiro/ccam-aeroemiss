@@ -45,11 +45,6 @@ write(6,*) "CCAM: Starting aeroemiss"
 write(6,*) "=============================================================================="
 
 
-#ifndef stacklimit
-! For linux only - removes stacklimit on all processors
-call setstacklimit(-1)
-#endif 
-
 Write(6,*) 'AEROEMISS - CMIP aerosols to CC grid'
 write(6,*) version
 

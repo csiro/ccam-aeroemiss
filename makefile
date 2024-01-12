@@ -3,9 +3,6 @@ ifneq ($(CUSTOM),yes)
 FC = ifort
 XFLAGS = -qopenmp -xHost -I $(NETCDF_ROOT)/include
 LIBS = -L $(NETCDF_ROOT)/lib -lnetcdf
-ifneq ($(NCCLIB),yes)
-LIBS += -lnetcdff
-endif
 PPFLAG90 = -fpp
 PPFLAG77 = -fpp
 DEBUGFLAG = -check all -debug all -traceback -fpe0
@@ -34,7 +31,7 @@ endif
 # Setonix
 ifeq ($(SETONIX),yes)
 FC = ftn
-XFLAGS = -O2 -mtune=native -march=native -Dncclib -fallow-argument-mismatch -fopenmp
+XFLAGS = -O2 -mtune=native -march=native -fallow-argument-mismatch -fopenmp
 LIBS = -lnetcdf
 PPFLAG90 = -x f95-cpp-input
 PPFLAG77 = -x f77-cpp-input
@@ -46,15 +43,11 @@ ifeq ($(TEST),yes)
 XFLAGS += $(DEBUGFLAG)
 endif
 
-ifeq ($(NCCLIB),yes)
-XFLAGS += -Dncclib
-endif
-
 
 OBJT = aeroemiss.o aeroread.o setxyz_m.o ccinterp.o readswitch.o jimcc_m.o \
        latltoij_m.o xyzinfo_m.o newmpar_m.o indices_m.o \
        parm_m.o precis_m.o ind_m.o jimco_m.o jim_utils.o nfft_m.o \
-       ncread.o ncwrite.o misc.o netcdf_m.o stacklimit.o
+       ncread.o ncwrite.o misc.o netcdf_m.o 
 
 aeroemiss :$(OBJT)
 	$(FC) $(XFLAGS) $(OBJT) $(LIBS) -o aeroemiss
@@ -65,8 +58,6 @@ clean:
 
 .SUFFIXES:.f90
 
-stacklimit.o: stacklimit.c
-	cc -c stacklimit.c
 version.h: FORCE
 	rm -f brokenver tmpver
 	echo "character(len=*), parameter :: version = &" > brokenver
