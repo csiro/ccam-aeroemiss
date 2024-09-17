@@ -79,6 +79,7 @@ do j = 1,3 ! 1=Anth,2=Shipping,3=Biomass burning
     ncstatus = nf_open(fname(fp+1),nf_nowrite,ncid)
     If ( ncstatus/=nf_noerr ) Then
       Write(6,*) "ERROR: Error opening NetCDF file ",trim(fname(fp+1))," (",ncstatus,")"
+      write(6,*) nf_strerror(ncstatus)
       call finishbanner
       Stop -1
     End If 

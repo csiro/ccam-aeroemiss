@@ -1,2 +1,2 @@
 character(len=*), parameter :: version = &
-'AEROEMISS Date:   Wed Aug 10 09:16:08 2022 +0800 commit d239cc63f903faa492b94ddb68b2285d234f04f2'
+'AEROEMISS Date:   Fri Jan 12 12:10:03 2024 +1100 commit c36f89f5e1b6038b43eec3a968e4bd86ae10d326'
