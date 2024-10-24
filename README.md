@@ -7,7 +7,7 @@ Aeroemiss is used to create aerosol emissions based on CMIP5 and CMIP6 forcings 
 
 For documentation, see our website at
 
-[https://confluence.csiro.au/display/CCAM/CCAM]
+[https://research.csiro.au/ccam/]
 
 ## Dependencies
 
