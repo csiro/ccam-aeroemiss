@@ -1,6 +1,6 @@
 ! Conformal Cubic Atmospheric Model
     
-! Copyright 2015-2020 Commonwealth Scientific Industrial Research Organisation (CSIRO)
+! Copyright 2015-2025 Commonwealth Scientific Industrial Research Organisation (CSIRO)
     
 ! This file is part of the Conformal Cubic Atmospheric Model (CCAM)
 !
@@ -19,7 +19,7 @@
 
 !------------------------------------------------------------------------------
     
-! This subroutine is to extract (in memory) data from the CMIP5 aerosol dataset.
+! This subroutine is to extract (in memory) data from the CMIP aerosol dataset.
 !
 
 Subroutine getdata(dataout,grid,lsdata,rlld,sibdim,fname,month)
@@ -48,6 +48,8 @@ Real, dimension(:,:), allocatable :: coverout,tmpout
 Real, dimension(2,2) :: emlonlat
 real, dimension(:), allocatable :: rlat,dis
 real aglon,aglat,alci,alcj,ssum
+real alon_test_a, alon_test_b, alat_test_a, alat_test_b, xp, yp
+real aa00, aa10, aa01, aa11
 character(len=*), dimension(13), intent(in) :: fname
 character*160, dimension(2) :: varname
 character*3 :: aname
@@ -70,7 +72,7 @@ dataout = 0.
 !ncstatus = nf_close(ncid)
 
 
-Write(6,*) 'Process CMIP5 aerosol datasets'
+Write(6,*) 'Process CMIP aerosol datasets'
 do j = 1,3 ! 1=Anth,2=Shipping,3=Biomass burning
   do n = 1,3 ! 1=SO2,BC,OC
       
@@ -79,7 +81,6 @@ do j = 1,3 ! 1=Anth,2=Shipping,3=Biomass burning
     ncstatus = nf_open(fname(fp+1),nf_nowrite,ncid)
     If ( ncstatus/=nf_noerr ) Then
       Write(6,*) "ERROR: Error opening NetCDF file ",trim(fname(fp+1))," (",ncstatus,")"
-      write(6,*) nf_strerror(ncstatus)
       call finishbanner
       Stop -1
     End If 
@@ -102,7 +103,6 @@ do j = 1,3 ! 1=Anth,2=Shipping,3=Biomass burning
     if ( ncstatus==nf_noerr ) then
       cmipmode = 6
     end if
-    !write(6,*) "cmipmode ",cmipmode
 
     aname='ERR'
     select case(n)
@@ -310,8 +310,7 @@ do j = 1,3 ! 1=Anth,2=Shipping,3=Biomass burning
       countt=0
       
       ! bin tracer
-!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(NONE) SHARED(arrsize,emlonlat,sibdim,lcmap) &
-!$OMP   PRIVATE(jj,aglat,ii,aglon,alci,alcj,nface,lci,lcj)              
+!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(NONE) SHARED(arrsize,emlonlat,sibdim,lcmap) PRIVATE(jj,aglat,ii,aglon,alci,alcj,nface,lci,lcj)              
       do jj=1,arrsize(2,2)
         aglat=(emlonlat(2,2)-emlonlat(2,1))*real(jj-1)/real(arrsize(2,2)-1)+emlonlat(2,1)
         do ii=1,arrsize(1,2)          
@@ -339,8 +338,7 @@ do j = 1,3 ! 1=Anth,2=Shipping,3=Biomass burning
       end do
   
       ! fill missing values
-!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(NONE) SHARED(sibdim,countt,lsdata,j,rlld,emlonlat,arrsize,datatmp,coverout) &
-!$OMP   PRIVATE(lci,lcj,aglon,aglat,ii,jj)
+!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(NONE) SHARED(sibdim,countt,lsdata,j,rlld,emlonlat,arrsize,datatmp,coverout) PRIVATE(lci,lcj,aglon,aglat,ii,jj)
       do lcj=1,sibdim(2)
         do lci=1,sibdim(1)
           if (countt(lci,lcj)==0) then
@@ -408,8 +406,7 @@ varname(2)='kg/yr'
 Call getmeta(ncid,varname,coverout,arrsize)
 
 ! bin tracer
-!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(NONE) SHARED(arrsize,emlonlat,sibdim,lcmap) &
-!$OMP   PRIVATE(jj,aglat,ii,aglon,alci,alcj,nface,lci,lcj)              
+!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(NONE) SHARED(arrsize,emlonlat,sibdim,lcmap) PRIVATE(jj,aglat,ii,aglon,alci,alcj,nface,lci,lcj)              
 do jj=1,arrsize(2,2)
   aglat=(emlonlat(2,2)-emlonlat(2,1))*real(jj-1)/real(arrsize(2,2)-1)+emlonlat(2,1)
   do ii=1,arrsize(1,2)          
@@ -436,8 +433,7 @@ do jj=1,arrsize(2,2)
 end do
   
 ! fill missing values
-!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(NONE) SHARED(sibdim,countt,lsdata,rlld,emlonlat,arrsize,dataout,coverout) &
-!$OMP   PRIVATE(lci,lcj,aglon,aglat,ii,jj)
+!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(NONE) SHARED(sibdim,countt,lsdata,rlld,emlonlat,arrsize,dataout,coverout) PRIVATE(lci,lcj,aglon,aglat,ii,jj)
 do lcj=1,sibdim(2)
   do lci=1,sibdim(1)
     if (countt(lci,lcj)==0) then
@@ -521,10 +517,9 @@ do n=1,3
   countt=0
 
   ! bin tracer
-!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(NONE) SHARED(arrsize,emlonlat,sibdim,lcmap) &
-!$OMP   PRIVATE(jj,aglat,ii,aglon,alci,alcj,nface,lci,lcj)              
+!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(NONE) SHARED(arrsize,emlonlat,sibdim,lcmap,rlat) PRIVATE(jj,aglat,ii,aglon,alci,alcj,nface,lci,lcj)              
   do jj=1,arrsize(2,2)
-    aglat=(emlonlat(2,2)-emlonlat(2,1))*real(jj-1)/real(arrsize(2,2)-1)+emlonlat(2,1)
+    aglat=rlat(jj)
     do ii=1,arrsize(1,2)          
       aglon=(emlonlat(1,2)-emlonlat(1,1))*real(ii-1)/real(arrsize(1,2)-1)+emlonlat(1,1)
       call lltoijmod(aglon,aglat,alci,alcj,nface)
@@ -557,7 +552,7 @@ do n=1,3
   ! fill missing values
   do lcj=1,sibdim(2)
     do lci=1,sibdim(1)
-      if (countt(lci,lcj)==0) then
+      if (countt(lci,lcj)<=4) then
         select case(n)
           case(1)
             ltest=nint(lsdata(lci,lcj))==0
@@ -569,13 +564,28 @@ do n=1,3
           aglat=rlld(lci,lcj,2)
           if (aglon<emlonlat(1,1)) aglon=aglon+360.
           if (aglon>emlonlat(1,1)+360.) aglon=aglon-360.
-          ii=nint((aglon-emlonlat(1,1))*real(arrsize(1,2)-1)/(emlonlat(1,2)-emlonlat(1,1)))+1
+          ii=int((aglon-emlonlat(1,1))*real(arrsize(1,2)-1)/(emlonlat(1,2)-emlonlat(1,1)))+1
           if (ii>arrsize(1,2)) ii=ii-arrsize(1,2)
+          if (ii==arrsize(1,2)) ii=ii-1
+          alon_test_a=(emlonlat(1,2)-emlonlat(1,1))*real(ii-1)/real(arrsize(1,2)-1)+emlonlat(1,1)
+          alon_test_b=(emlonlat(1,2)-emlonlat(1,1))*real(ii)/real(arrsize(1,2)-1)+emlonlat(1,1)
+          xp = (aglon-alon_test_a)/(alon_test_b-alon_test_a)
           ! non-uniform spacing for rlat?
           dis=(rlat-aglat)**2
           minpos=minloc(dis)
           jj=minpos(1)
-          dataout(lci,lcj,12+n)=coverout(ii,jj)
+          if ( rlat(jj)>aglat ) jj=jj-1
+          if (jj==arrsize(2,2)) jj=jj-1
+          alat_test_a=rlat(jj)
+          alat_test_b=rlat(jj+1)
+          yp = (aglat-alat_test_a)/(alat_test_b-alat_test_a)
+          aa00 = coverout(ii,jj)
+          aa10 = coverout(ii+1,jj) - coverout(ii,jj)
+          aa01 = coverout(ii,jj+1) - coverout(ii,jj)
+          aa11 = coverout(ii+1,jj+1) - coverout(ii+1,jj) - coverout(ii,jj+1) + coverout(ii,jj)
+          dataout(lci,lcj,12+n)=aa00 + aa10*xp + aa01*yp + aa11*xp*yp
+        else
+          dataout(lci,lcj,12+n) = 0.  
         end if      
         countt(lci,lcj)=1
       end if
@@ -641,10 +651,9 @@ do n=1,3
   countt=0
 
   ! bin tracer
-!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(NONE) SHARED(arrsize,emlonlat,sibdim,lcmap) &
-!$OMP   PRIVATE(jj,aglat,ii,aglon,alci,alcj,nface,lci,lcj)              
+!$OMP PARALLEL DO SCHEDULE(STATIC) DEFAULT(NONE) SHARED(arrsize,emlonlat,sibdim,lcmap,rlat) PRIVATE(jj,aglat,ii,aglon,alci,alcj,nface,lci,lcj)              
   do jj=1,arrsize(2,2)
-    aglat=(emlonlat(2,2)-emlonlat(2,1))*real(jj-1)/real(arrsize(2,2)-1)+emlonlat(2,1)
+    aglat=rlat(jj)
     do ii=1,arrsize(1,2)          
       aglon=(emlonlat(1,2)-emlonlat(1,1))*real(ii-1)/real(arrsize(1,2)-1)+emlonlat(1,1)
       call lltoijmod(aglon,aglat,alci,alcj,nface)
@@ -671,18 +680,33 @@ do n=1,3
   ! fill missing values
   do lcj=1,sibdim(2)
     do lci=1,sibdim(1)
-      if (countt(lci,lcj)==0) then
+      if (countt(lci,lcj)<=4) then
         if (nint(lsdata(lci,lcj))==1) then
           aglon=rlld(lci,lcj,1)
           aglat=rlld(lci,lcj,2)
           if (aglon<emlonlat(1,1)) aglon=aglon+360.
           if (aglon>emlonlat(1,1)+360.) aglon=aglon-360.
-          ii=nint((aglon-emlonlat(1,1))*real(arrsize(1,2)-1)/(emlonlat(1,2)-emlonlat(1,1)))+1
+          ii=int((aglon-emlonlat(1,1))*real(arrsize(1,2)-1)/(emlonlat(1,2)-emlonlat(1,1)))+1
           if (ii>arrsize(1,2)) ii=ii-arrsize(1,2)
+          if (ii==arrsize(1,2)) ii=ii-1
+          alon_test_a=(emlonlat(1,2)-emlonlat(1,1))*real(ii-1)/real(arrsize(1,2)-1)+emlonlat(1,1)
+          alon_test_b=(emlonlat(1,2)-emlonlat(1,1))*real(ii)/real(arrsize(1,2)-1)+emlonlat(1,1)
+          xp = (aglon-alon_test_a)/(alon_test_b-alon_test_a)
           dis=(rlat-aglat)**2
           minpos=minloc(dis)
           jj=minpos(1)
-          dataout(lci,lcj,16+n)=coverout(ii,jj)
+          if ( rlat(jj)>aglat ) jj=jj-1
+          if (jj==arrsize(2,2)) jj=jj-1
+          alat_test_a=rlat(jj)
+          alat_test_b=rlat(jj+1)
+          yp = (aglat-alat_test_a)/(alat_test_b-alat_test_a)
+          aa00 = coverout(ii,jj)
+          aa10 = coverout(ii+1,jj) - coverout(ii,jj)
+          aa01 = coverout(ii,jj+1) - coverout(ii,jj)
+          aa11 = coverout(ii+1,jj+1) - coverout(ii+1,jj) - coverout(ii,jj+1) + coverout(ii,jj)
+          dataout(lci,lcj,16+n)=aa00 + aa10*xp + aa01*yp + aa11*xp*yp
+        else
+          dataout(lci,lcj,16+n)=0.  
         end if      
         countt(lci,lcj)=1
       end if
