@@ -582,6 +582,7 @@ do n=1,3
           jj=minpos(1)
           if ( rlat(jj)>aglat ) jj=jj-1
           if (jj==arrsize(2,2)) jj=jj-1
+          if (jj==0) jj=jj+1
           alat_test_a=rlat(jj)
           alat_test_b=rlat(jj+1)
           yp = (aglat-alat_test_a)/(alat_test_b-alat_test_a)
@@ -706,6 +707,7 @@ do n=1,3
           jj=minpos(1)
           if ( rlat(jj)>aglat ) jj=jj-1
           if (jj==arrsize(2,2)) jj=jj-1
+          if (jj==0) jj=jj+1
           alat_test_a=rlat(jj)
           alat_test_b=rlat(jj+1)
           yp = (aglat-alat_test_a)/(alat_test_b-alat_test_a)
