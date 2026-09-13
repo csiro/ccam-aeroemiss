@@ -1,6 +1,6 @@
 ! Conformal Cubic Atmospheric Model
     
-! Copyright 2015 Commonwealth Scientific Industrial Research Organisation (CSIRO)
+! Copyright 2015-2026 Commonwealth Scientific Industrial Research Organisation (CSIRO)
     
 ! This file is part of the Conformal Cubic Atmospheric Model (CCAM)
 !
@@ -21,7 +21,7 @@
 
 Program aeroemiss
 
-! This code creates CCAM aerosol emission data using the CMIP5 datasets
+! This code creates CCAM aerosol emission data using the CMIP5 and CMIP6 datasets
 
 Implicit None
 
@@ -33,11 +33,11 @@ Character*1024 topofile,so2_anth,so2_ship,so2_biom
 Character*1024 oc_anth,oc_ship,oc_biom
 Character*1024 bc_anth,bc_ship,bc_biom
 Character*1024 volcano,dmsfile,dustfile
-Integer nopts,month
+Integer nopts, month, year
 
-Namelist/aero/ topofile,month,so2_anth,so2_ship,so2_biom,oc_anth, &
-               oc_ship,oc_biom,bc_anth,bc_ship,bc_biom,volcano,   &
-               dmsfile,dustfile
+Namelist/aero/ topofile,month,year,so2_anth,so2_ship,so2_biom,oc_anth,  &
+               oc_ship,oc_biom,bc_anth,bc_ship,bc_biom,volcano,dmsfile, &
+               dustfile
 
 ! Start banner
 write(6,*) "=============================================================================="
@@ -77,7 +77,7 @@ fname(11)=volcano
 fname(12)=dmsfile
 fname(13)=dustfile
 
-Call createaero(options,nopts,fname,month)
+Call createaero(options,nopts,fname,month,year)
 
 Deallocate(options)
 
@@ -85,8 +85,7 @@ Deallocate(options)
 write(6,*) "CCAM: aeroemiss completed successfully"
 call finishbanner
 
-Stop
-End
+End Program
 
 subroutine finishbanner
 
@@ -118,12 +117,13 @@ Write(6,*) "  -o aero      Aerosol emissions output filename"
 Write(6,*) "  aero.nml     Namelist file (see below)"
 Write(6,*)
 Write(6,*) "Namelist:"
-Write(6,*) "  The namelist aero.nml specifies the CMIP5 files to"
+Write(6,*) "  The namelist aero.nml specifies the CMIP files to"
 Write(6,*) "  use for emission data.  The following example"
 Write(6,*) "  illustrates the namelist syntax:"
 Write(6,*)
 Write(6,*) "  &aero"
 Write(6,*) '    month    = 1'
+write(6,*) '    year     = 2000'
 Write(6,*) '    topofile = "topout"'
 Write(6,*) '    so2_anth = "IPCC_emissions_RCP45_SO2_anthropogenic.nc"'
 Write(6,*) '    so2_ship = "IPCC_emissions_RCP45_SO2_ships.nc"'
@@ -141,6 +141,7 @@ Write(6,*) "    /"
 Write(6,*)
 Write(6,*) "  where:"
 Write(6,*) '    month         = Month for emissions'
+write(6,*) '    year          = Year for emissions'
 Write(6,*) '    topofile      = Topography (input) file'
 Write(6,*) '    so2_anth      = Anthropogenic SO2 emissions file'
 Write(6,*) '    so2_ship      = Ships SO2 emissions file'
@@ -190,13 +191,13 @@ End
 ! This subroutine processes the sib data
 !
 
-Subroutine createaero(options,nopts,fname,month)
+Subroutine createaero(options,nopts,fname,month,year)
 
 Use ccinterp
 
 Implicit None
 
-Integer, intent(in) :: nopts,month
+Integer, intent(in) :: nopts, month, year
 Character(len=*), dimension(nopts,2), intent(in) :: options
 Character(len=*), dimension(13), intent(in) :: fname
 Character*80, dimension(3) :: outputdesc
@@ -233,8 +234,8 @@ lsdata=1.-lsdata
 ! Determine lat/lon to CC mapping
 Call ccgetgrid(rlld,gridout,sibdim,lonlat,schmidt,ds)
 
-! Read CMIP5 aerosol data
-Call getdata(aerosol,gridout,lsdata,rlld,sibdim,fname,month)
+! Read CMIP aerosol data
+Call getdata(aerosol,gridout,lsdata,rlld,sibdim,fname,month,year)
 
 Deallocate(gridout,rlld,lsdata)
 

@@ -2,6 +2,9 @@
 ifneq ($(CUSTOM),yes)
 FC = ifort
 XFLAGS = -qopenmp -xHost -I $(NETCDF_ROOT)/include
+ifeq ($(ZEN3),yes)
+XFLAGS = -qopenmp -axCORE-AVX2 -align array32byte -I $(NETCDF_ROOT)/include
+endif
 LIBS = -L $(NETCDF_ROOT)/lib -lnetcdf
 PPFLAG90 = -fpp
 PPFLAG77 = -fpp

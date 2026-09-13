@@ -1,6 +1,6 @@
 ! Conformal Cubic Atmospheric Model
     
-! Copyright 2015-2025 Commonwealth Scientific Industrial Research Organisation (CSIRO)
+! Copyright 2015-2026 Commonwealth Scientific Industrial Research Organisation (CSIRO)
     
 ! This file is part of the Conformal Cubic Atmospheric Model (CCAM)
 !
@@ -22,14 +22,14 @@
 ! This subroutine is to extract (in memory) data from the CMIP aerosol dataset.
 !
 
-Subroutine getdata(dataout,grid,lsdata,rlld,sibdim,fname,month)
+Subroutine getdata(dataout,grid,lsdata,rlld,sibdim,fname,month,year)
 
 Use ccinterp
 use netcdf_m
 
 Implicit None
 
-Integer, intent(in) :: month
+Integer, intent(in) :: month, year
 Integer, dimension(2), intent(in) :: sibdim
 integer, dimension(sibdim(1),sibdim(2)) :: countt
 integer, dimension(4,2) :: arrsize
@@ -40,6 +40,7 @@ integer, dimension(:,:,:), allocatable :: lcmap
 integer ncstatus,ncid
 integer i,j,n,ix,ii,jj,fp,pos,ind,lci,lcj,nface
 integer cmipmode, valident
+integer iarchi
 Real, dimension(sibdim(1),sibdim(2),19), intent(out) :: dataout
 real, dimension(sibdim(1),sibdim(2)) :: datatmp
 Real, dimension(sibdim(1),sibdim(2)), intent(in) :: grid,lsdata
@@ -53,24 +54,10 @@ real aa00, aa10, aa01, aa11
 character(len=*), dimension(13), intent(in) :: fname
 character*160, dimension(2) :: varname
 character*3 :: aname
+character(len=5) :: mip_text
 logical ltest
 
 dataout = 0.
-
-! read size and coordinates
-!ncstatus = nf_open(fname(2),nf_nowrite,ncid)
-!If ( ncstatus /= nf_noerr ) Then
-!  Write(6,*) "ERROR: Error opening NetCDF file ",trim(fname(2))," (",ncstatus,")"
-!  call finishbanner
-!  Stop -1
-!End If
-!Call getncdims(ncid,ncsize)
-!Call getnclonlat(ncid,emlonlat)
-!arrsize = 1
-!arrsize(1:2,2) = ncsize(1:2)
-!arrsize(4,1) = month
-!ncstatus = nf_close(ncid)
-
 
 Write(6,*) 'Process CMIP aerosol datasets'
 do j = 1,3 ! 1=Anth,2=Shipping,3=Biomass burning
@@ -87,22 +74,53 @@ do j = 1,3 ! 1=Anth,2=Shipping,3=Biomass burning
     write(6,*) "Processing ",trim(fname(fp+1))
     call getncdims(ncid,ncsize)
     Call getnclonlat(ncid,emlonlat)
+    
+    ! determine MIP era for data formap
+    cmipmode = 5
+    ncstatus = nf_get_att_text(ncid,nf_global,"mip_era",mip_text)
+    if ( ncstatus == nf_noerr ) then
+      if ( mip_text == "CMIP7" ) then
+        cmipmode = 7
+      else if ( mip_text == "CMIP6" ) then
+        cmipmode = 6
+      end if
+    else
+      ! assume CMIP5
+      cmipmode = 5
+    end if
+    write(6,*) "cmipmode = ",cmipmode
+    
     arrsize = 1
     arrsize(1:2,2) = ncsize(1:2)
-    arrsize(4,1) = month
     if ( allocated( coverout ) ) then
       deallocate( coverout, tmpout ) 
       deallocate( lcmap )
     end if
     allocate( coverout(arrsize(1,2),arrsize(2,2)), tmpout(arrsize(1,2),arrsize(2,2)) )
     allocate( lcmap(arrsize(1,2),arrsize(2,2),2) )
+   
+    select case( cmipmode )
+      case(5,6)
+        if ( ncsize(4) == 12 ) then  
+          iarchi = month  
+        else
+          write(6,*) "ERROR: Expecting 12 month file for cmipmode = ",cmipmode
+          stop
+        end if  
+      case(7)
+        call findarchi(ncid,iarchi,month,year)
+      case default
+        write(6,*) "ERROR: Unable to determine cmipmode"
+        stop
+    end select
+    arrsize(4,1) = iarchi
 
-    ! check for sector
-    cmipmode = 5
-    ncstatus = nf_inq_varid(ncid,'sector',valident)
-    if ( ncstatus==nf_noerr ) then
-      cmipmode = 6
-    end if
+!    ! check for sector
+!    cmipmode = 5
+!    ncstatus = nf_inq_varid(ncid,'sector',valident)
+!    if ( ncstatus==nf_noerr ) then
+!      cmipmode = 6
+!    end if
 
     aname='ERR'
     select case(n)
@@ -128,176 +146,211 @@ do j = 1,3 ! 1=Anth,2=Shipping,3=Biomass burning
       pos = (j-1)*6 + (n-1)*2 + i
       select case(pos)
         case(1,3,5) ! SO2,BC,OC Anth Level1
-          if ( cmipmode==6 ) then
-            nstart(1) = 1
-            nstart(2) = 1
-            nstart(4) = month
-            ncount(1) = arrsize(1,2)
-            ncount(2) = arrsize(2,2)
-            ncount(3) = 1
-            ncount(4) = 1
-            nstart(3) = 1 ! sector=0 (Agriculture)
-            ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_anthro',valident)
-            ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
-            where ( tmpout<1.e20)
-              coverout = coverout + tmpout
-            end where  
-            nstart(3) = 5 ! sector=4 (Residential/Commercial)
-            ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_anthro',valident)
-            ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
-            where ( tmpout<1.e20)
-              coverout = coverout + tmpout
-            end where  
-            nstart(3) = 4 ! sector=3 (Transport)
-            ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_anthro',valident)
-            ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
-            where ( tmpout<1.e20)
-              coverout = coverout + tmpout
-            end where  
-            nstart(3) = 8 ! sector=7 (Waste)
-            ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_anthro',valident)
-            ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
-            where ( tmpout<1.e20)
-              coverout = coverout + tmpout
-            end where  
-          else    
-            varname(1)='emiss_awb'
-            varname(2)='kg m-2 s-1'
-            Call getmeta(ncid,varname,tmpout,arrsize)
-            where ( tmpout<1.e20)
-              coverout = coverout + tmpout
-            end where  
-            varname(1)='emiss_dom'
-            varname(2)='kg m-2 s-1'
-            Call getmeta(ncid,varname,tmpout,arrsize)
-            where ( tmpout<1.e20)
-              coverout = coverout + tmpout
-            end where  
-            varname(1)='emiss_tra'
-            varname(2)='kg m-2 s-1'
-            Call getmeta(ncid,varname,tmpout,arrsize)
-            where ( tmpout<1.e20)
-              coverout = coverout + tmpout
-            end where  
-            varname(1)='emiss_wst'
-            varname(2)='kg m-2 s-1'
-            Call getmeta(ncid,varname,tmpout,arrsize)
-            where ( tmpout<1.e20)
-              coverout = coverout + tmpout
-            end where  
-          end if  
+          select case(cmipmode)
+            case(6,7)  
+              nstart(1) = 1
+              nstart(2) = 1
+              nstart(4) = iarchi
+              ncount(1) = arrsize(1,2)
+              ncount(2) = arrsize(2,2)
+              ncount(3) = 1
+              ncount(4) = 1
+              nstart(3) = 1 ! sector=0 (Agriculture)
+              ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_anthro',valident)
+              ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
+              where ( tmpout<1.e20)
+                coverout = coverout + tmpout
+              end where  
+              nstart(3) = 5 ! sector=4 (Residential/Commercial)
+              ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_anthro',valident)
+              ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
+              where ( tmpout<1.e20)
+                coverout = coverout + tmpout
+              end where  
+              nstart(3) = 4 ! sector=3 (Transport)
+              ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_anthro',valident)
+              ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
+              where ( tmpout<1.e20)
+                coverout = coverout + tmpout
+              end where  
+              nstart(3) = 8 ! sector=7 (Waste)
+              ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_anthro',valident)
+              ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
+              where ( tmpout<1.e20)
+                coverout = coverout + tmpout
+              end where  
+            case(5)  
+              varname(1)='emiss_awb'
+              varname(2)='kg m-2 s-1'
+              Call getmeta(ncid,varname,tmpout,arrsize)
+              where ( tmpout<1.e20)
+                coverout = coverout + tmpout
+              end where  
+              varname(1)='emiss_dom'
+              varname(2)='kg m-2 s-1'
+              Call getmeta(ncid,varname,tmpout,arrsize)
+              where ( tmpout<1.e20)
+                coverout = coverout + tmpout
+              end where  
+              varname(1)='emiss_tra'
+              varname(2)='kg m-2 s-1'
+              Call getmeta(ncid,varname,tmpout,arrsize)
+              where ( tmpout<1.e20)
+                coverout = coverout + tmpout
+              end where  
+              varname(1)='emiss_wst'
+              varname(2)='kg m-2 s-1'
+              Call getmeta(ncid,varname,tmpout,arrsize)
+              where ( tmpout<1.e20)
+                coverout = coverout + tmpout
+              end where  
+          end select
           ind = (n-1)*2 + 1 ! 1=so2a1,3=bca1,5=oca1
 
         case(2,4,6) ! SO2,BC,OC Anth Upper level
-          if ( cmipmode==6 ) then
-            nstart(1) = 1
-            nstart(2) = 1
-            nstart(4) = month
-            ncount(1) = arrsize(1,2)
-            ncount(2) = arrsize(2,2)
-            ncount(3) = 1
-            ncount(4) = 1
-            nstart(3) = 2 ! sector=1 (Energy)
-            ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_anthro',valident)
-            ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
-            where ( tmpout<1.e20)
-              coverout = coverout + tmpout
-            end where  
-            nstart(3) = 3 ! sector=2 (Industry)
-            ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_anthro',valident)
-            ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
-            where ( tmpout<1.e20)
-              coverout = coverout + tmpout
-            end where  
-          else    
-            varname(1)='emiss_ene'
-            varname(2)='kg m-2 s-1'
-            Call getmeta(ncid,varname,tmpout,arrsize)
-            where ( tmpout<1.e20)
-              coverout = coverout + tmpout
-            end where  
-            varname(1)='emiss_ind'
-            varname(2)='kg m-2 s-1'
-            Call getmeta(ncid,varname,tmpout,arrsize)
-            where ( tmpout<1.e20)
-              coverout = coverout + tmpout
-            end where  
-          end if  
+          select case(cmipmode)
+            case(6,7)  
+              nstart(1) = 1
+              nstart(2) = 1
+              nstart(4) = iarchi
+              ncount(1) = arrsize(1,2)
+              ncount(2) = arrsize(2,2)
+              ncount(3) = 1
+              ncount(4) = 1
+              nstart(3) = 2 ! sector=1 (Energy)
+              ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_anthro',valident)
+              ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
+              where ( tmpout<1.e20)
+                coverout = coverout + tmpout
+              end where  
+              nstart(3) = 3 ! sector=2 (Industry)
+              ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_anthro',valident)
+              ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
+              where ( tmpout<1.e20)
+               coverout = coverout + tmpout
+              end where  
+            case(5)  
+              varname(1)='emiss_ene'
+              varname(2)='kg m-2 s-1'
+              Call getmeta(ncid,varname,tmpout,arrsize)
+              where ( tmpout<1.e20)
+                coverout = coverout + tmpout
+              end where  
+              varname(1)='emiss_ind'
+              varname(2)='kg m-2 s-1'
+              Call getmeta(ncid,varname,tmpout,arrsize)
+              where ( tmpout<1.e20)
+                coverout = coverout + tmpout
+              end where  
+          end select 
           ind = n*2 ! 2=so2a2,4=bca2,6=oca2
 
         case(7,9,11) ! SO2,BC,OC Ship Level1
-          if ( cmipmode==6 ) then
-            nstart(1) = 1
-            nstart(2) = 1
-            nstart(4) = month
-            ncount(1) = arrsize(1,2)
-            ncount(2) = arrsize(2,2)
-            ncount(3) = 1
-            ncount(4) = 1
-            nstart(3) = 8 ! sector=7 (Ship)
-            ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_anthro',valident)
-            ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
-            where ( tmpout<1.e20)
-              coverout = coverout + tmpout
-            end where  
-          else    
-            varname(1)='emiss_shp'
-            varname(2)='kg m-2 s-1'
-            Call getmeta(ncid,varname,tmpout,arrsize)
-            where ( tmpout<1.e20)
-              coverout = coverout + tmpout
-            end where  
-          end if  
+          select case(cmipmode)
+            case(6,7)  
+              nstart(1) = 1
+              nstart(2) = 1
+              nstart(4) = iarchi
+              ncount(1) = arrsize(1,2)
+              ncount(2) = arrsize(2,2)
+              ncount(3) = 1
+              ncount(4) = 1
+              nstart(3) = 8 ! sector=7 (Ship)
+              ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_anthro',valident)
+              ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
+              where ( tmpout<1.e20)
+                coverout = coverout + tmpout
+              end where  
+            case(5)  
+              varname(1)='emiss_shp'
+              varname(2)='kg m-2 s-1'
+              Call getmeta(ncid,varname,tmpout,arrsize)
+              where ( tmpout<1.e20)
+                coverout = coverout + tmpout
+              end where  
+          end select
           ind = (n-1)*2 + 1 ! 1=so2a1,3=bca1,5=oca1
 
         case(13,15,17) ! SO2,BC,OC Biomass burning level1
-          if ( cmipmode==6 ) then
-            nstart(1) = 1
-            nstart(2) = 1
-            nstart(4) = month
-            ncount(1) = arrsize(1,2)
-            ncount(2) = arrsize(2,2)
-            ncount(3) = 1
-            ncount(4) = 1
-            nstart(3) = 3 ! sector=2 (Grassland)
-            ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_openburning',valident)
-            ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
-            where ( tmpout<1.e20)
-              coverout = coverout + tmpout
-            end where  
-          else
-            varname(1)='grassfire'
-            varname(2)='kg m-2 s-1'
-            Call getmeta(ncid,varname,tmpout,arrsize)
-            where ( tmpout<1.e20)
-              coverout = coverout + tmpout
-            end where  
-          end if  
+          select case(cmipmode)
+            case(6,7)
+              ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_openburning',valident)
+              if ( ncstatus == nf90_noerr ) then
+                nstart(1) = 1
+                nstart(2) = 1
+                nstart(4) = iarchi
+                ncount(1) = arrsize(1,2)
+                ncount(2) = arrsize(2,2)
+                ncount(3) = 1
+                ncount(4) = 1
+                nstart(3) = 3 ! sector=2 (Grassland)
+                ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
+              else
+                ncstatus = nf90_inq_varid(ncid,'grassfire',valident)  
+                if ( ncstatus /= nf90_noerr ) then
+                  write(6,*) "ERROR: Need to add grassfire to emissions"
+                  stop
+                end if
+                nstart(1) = 1
+                nstart(2) = 1
+                nstart(3) = iarchi
+                ncount(1) = arrsize(1,2)
+                ncount(2) = arrsize(2,2)
+                ncount(3) = 1
+                ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart(1:3),count=ncount(1:3))
+              end if
+              where ( tmpout<1.e20)
+                coverout = coverout + tmpout
+              end where  
+            case(5)
+              varname(1)='grassfire'
+              varname(2)='kg m-2 s-1'
+              Call getmeta(ncid,varname,tmpout,arrsize)
+              where ( tmpout<1.e20)
+                coverout = coverout + tmpout
+              end where  
+          end select
           ind = (n-1)*2 + 7 ! 7=so2b1,9=bcb1,11=ocb1       
 
         case(14,16,18) ! SO2,BC,OC Biomass burning upper level
-          if ( cmipmode==6 ) then
-            nstart(1) = 1
-            nstart(2) = 1
-            nstart(4) = month
-            ncount(1) = arrsize(1,2)
-            ncount(2) = arrsize(2,2)
-            ncount(3) = 1
-            ncount(4) = 1
-            nstart(3) = 2 ! sector=1 (Forest)
-            ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_openburning',valident)
-            ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
-            where ( tmpout<1.e20)
-              coverout = coverout + tmpout
-            end where  
-          else    
-            varname(1)='forestfire'
-            varname(2)='kg m-2 s-1'
-            Call getmeta(ncid,varname,tmpout,arrsize)
-            where ( tmpout<1.e20)
-              coverout = coverout + tmpout
-            end where  
-          end if  
+          select case(cmipmode)
+            case(6,7)
+              ncstatus = nf90_inq_varid(ncid,trim(aname)//'_em_openburning',valident)
+              if ( ncstatus == nf90_noerr ) then
+                nstart(1) = 1
+                nstart(2) = 1
+                nstart(4) = iarchi ! = month
+                ncount(1) = arrsize(1,2)
+                ncount(2) = arrsize(2,2)
+                ncount(3) = 1
+                ncount(4) = 1
+                nstart(3) = 2 ! sector=1 (Forest)
+                ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart,count=ncount)
+              else
+                ncstatus = nf90_inq_varid(ncid,'forestfire',valident)
+                if ( ncstatus /= nf90_noerr ) then
+                  write(6,*) "ERROR: Need to add forestfire to emissions"
+                  stop
+                end if
+                nstart(1) = 1
+                nstart(2) = 1
+                nstart(3) = iarchi ! = month
+                ncount(1) = arrsize(1,2)
+                ncount(2) = arrsize(2,2)
+                ncount(3) = 1
+                ncstatus = nf90_get_var(ncid,valident,tmpout,start=nstart(1:3),count=ncount(1:3))
+              end if
+              where ( tmpout<1.e20)
+                coverout = coverout + tmpout
+              end where  
+            case(5)
+              varname(1)='forestfire'
+              varname(2)='kg m-2 s-1'
+              Call getmeta(ncid,varname,tmpout,arrsize)
+              where ( tmpout<1.e20)
+                coverout = coverout + tmpout
+              end where  
+          end select
           ind = (n-1)*2 + 8 ! 8=so2b2,10=bcb2,12=ocb2
 
         case DEFAULT
@@ -738,5 +791,242 @@ Write(6,*) "Task complete"
 
 Return
 End
-
     
+subroutine findarchi(ncid,iarchi,month,year)
+
+use netcdf_m
+
+implicit none
+
+integer, intent(in) :: ncid, month, year
+integer, intent(out) :: iarchi
+integer ncstatus, ldid, maxarchi, idvtime
+integer kdate_rsav, kdate_r
+integer year_r, year_s, month_s
+integer allleap
+integer(kind=8) mtimer
+real timer
+logical ltest
+character(len=80) datestring
+character(len=80) calendarstring
+
+ncstatus = nf90_inq_dimid(ncid,'time',ldid)
+if ( ncstatus /= nf90_noerr ) then
+  write(6,*) nf90_strerror(ncstatus)
+  stop
+end if
+ncstatus = nf90_inquire_dimension(ncid,ldid,len=maxarchi)
+if ( ncstatus /= nf90_noerr ) then
+  write(6,*) nf90_strerror(ncstatus)
+  stop
+end if
+ncstatus = nf90_inq_varid(ncid,'time',idvtime)
+if ( ncstatus /= nf90_noerr ) then
+  write(6,*) nf90_strerror(ncstatus)
+  stop
+end if
+ncstatus = nf90_get_att(ncid,idvtime,'units',datestring)
+if ( ncstatus /= nf90_noerr ) then
+  write(6,*) nf90_strerror(ncstatus)
+  stop
+end if
+ncstatus = nf90_get_att(ncid,idvtime,'calendar',calendarstring)
+if ( ncstatus /= nf90_noerr ) then
+  write(6,*) nf90_strerror(ncstatus)
+  stop
+end if
+
+call processdatestring(datestring,kdate_rsav)
+call processcalendarstring(calendarstring,allleap)
+
+! fast read
+iarchi = 1
+kdate_r = kdate_rsav
+ncstatus = nf90_get_var(ncid,idvtime,timer,start=(/iarchi/))
+if ( ncstatus /= nf90_noerr ) then
+  write(6,*) nf90_strerror(ncstatus)
+  stop
+end if
+mtimer = nint(timer,8)*1440_8 ! units=days
+call datefix(kdate_r,mtimer,allleap)
+year_r = kdate_r/10000
+year_s = year
+month_s = month
+!iarchi = max(year_s - year_r - 1,0)*12 ! assume 1 value per month
+iarchi = 0
+! search
+ltest = .true.
+do while ( ltest .and. iarchi<maxarchi )
+  iarchi = iarchi + 1  
+  kdate_r = kdate_rsav
+  ncstatus = nf90_get_var(ncid,idvtime,timer,start=(/iarchi/))
+  if ( ncstatus /= nf90_noerr ) then
+    write(6,*) nf90_strerror(ncstatus)
+    stop
+  end if
+  mtimer = nint(timer,8)*1440_8 ! units=days
+  call datefix(kdate_r,mtimer,allleap)
+  ltest = (kdate_r/100-year_s*100-month_s)<0
+end do
+if ( ltest ) then
+  write(6,*) "ERROR: Search failed with ltest,iarchi = ",ltest,iarchi
+  write(6,*) "kdate_r = ",kdate_r
+  stop
+end if
+
+return
+end subroutine findarchi
+
+subroutine processdatestring(datestring,kdate_rsav)
+
+implicit none
+
+integer, intent(out) :: kdate_rsav
+integer iposa, iposb, ierx
+integer yyyy, mm, dd
+character(len=*), intent(in) :: datestring
+
+! process year
+iposa = index(trim(datestring),'since')
+iposa = iposa + 5 ! skip 'since'
+iposb = index(trim(datestring(iposa:)),'-')
+iposb = iposa + iposb - 2 ! remove '-'
+read(datestring(iposa:iposb),FMT=*,iostat=ierx) yyyy
+if ( ierx/=0 ) then
+  write(6,*) "ERROR reading time units.  Expecting year but found ",datestring(iposa:iposb)
+  stop
+end if
+
+! process month
+iposa = iposb + 2 ! skip '-'
+iposb = index(trim(datestring(iposa:)),'-')
+iposb = iposa + iposb - 2 ! remove '-'
+read(datestring(iposa:iposb),FMT=*,iostat=ierx) mm
+if ( ierx/=0 ) then
+  write(6,*) "ERROR reading time units.  Expecting month but found ",datestring(iposa:iposb)
+  stop
+end if
+
+! process day
+iposa = iposb + 2 ! skip '-'
+iposb = index(trim(datestring(iposa:)),' ')
+iposb = iposa + iposb - 2 ! remove ' '
+if ( iposb<iposa ) then
+  read(datestring(iposa:),FMT=*,iostat=ierx) dd
+  if ( ierx/=0 ) then
+    write(6,*) "ERROR reading time units.  Expecting day but found ",datestring(iposa:)
+    stop
+  end if
+else
+  read(datestring(iposa:iposb),FMT=*,iostat=ierx) dd
+  if ( ierx/=0 ) then
+    write(6,*) "ERROR reading time units.  Expecting day but found ",datestring(iposa:iposb)
+    stop
+  end if
+end if
+
+! final date and time
+kdate_rsav = yyyy*10000 + mm*100 + dd
+
+return
+end subroutine processdatestring    
+    
+subroutine processcalendarstring(calendarstring,allleap)
+
+implicit none
+
+integer, intent(out) :: allleap
+character(len=*), intent(in) :: calendarstring
+
+allleap = -1
+select case(calendarstring)
+  case("")
+    allleap = 1 ! standard
+  case("365_day")
+    allleap = 0 ! 365day
+  case default
+    write(6,*) "ERROR: Unknown calendar = ",trim(calendarstring)
+    stop
+end select
+
+return
+end subroutine processcalendarstring
+
+subroutine datefix(kdate_r,mtimer_r,allleap)
+
+implicit none
+
+integer, intent(inout) :: kdate_r
+integer(kind=8), intent(inout) :: mtimer_r
+integer, intent(in) :: allleap
+integer(kind=8), dimension(12) :: mdays
+integer, dimension(12) :: mdays4
+!integer leap_l
+integer(kind=8) iyr,imo,iday
+integer(kind=8) mtimerh,mtimerm
+integer(kind=8) mdays_save
+integer(kind=8), parameter :: minsday = 1440
+
+iyr=int(kdate_r,8)/10000_8
+imo=(int(kdate_r,8)-10000_8*iyr)/100_8
+iday=int(kdate_r,8)-10000_8*iyr-100_8*imo
+
+call calendar_function(mdays4,kdate_r,allleap)
+mdays(:) = int( mdays4(:) )
+do while ( mtimer_r>minsday*mdays(imo) )
+  mtimer_r=mtimer_r-minsday*mdays(imo)
+  imo=imo+1_8
+  if ( imo>12_8 ) then
+    imo=1_8
+    iyr=iyr+1_8
+    if ( allleap==1 ) then
+      mdays(2)=28_8      
+      if ( mod(iyr,4_8)==0   ) mdays(2)=29_8
+      if ( mod(iyr,100_8)==0 ) mdays(2)=28_8
+      if ( mod(iyr,400_8)==0 ) mdays(2)=29_8
+    end if
+  end if
+end do
+  
+iday=iday+mtimer_r/minsday
+mtimer_r=mod(mtimer_r,minsday)
+  
+! at this point mtimer_r has been reduced to fraction of a day
+  
+!mdays_save=mdays(imo)
+!imo=imo+(iday-1_8)/mdays(imo)
+!iday=mod(iday-1_8,mdays_save)+1_8
+!
+!iyr=iyr+(imo-1_8)/12_8
+!imo=mod(imo-1_8,12_8)+1_8
+
+kdate_r=int(iday+100_8*(imo+100_8*iyr),4)
+!mtimer_r = 0.
+  
+return
+end subroutine datefix  
+    
+subroutine calendar_function(mdays,kdate,leap)
+
+integer, dimension(1:12), intent(out) :: mdays
+integer, intent(in) :: kdate, leap
+integer iyr, month
+
+iyr = kdate/10000
+month = (kdate-10000*iyr)/100
+if ( leap==cal_365 ) then ! 365 day calendar
+  mdays=(/31,28,31,30,31,30,31,31,30,31,30,31/)
+else if ( leap==cal_leap ) then ! 365/366 day calendar
+  mdays=(/31,28,31,30,31,30,31,31,30,31,30,31/)
+  if (mod(iyr,4)==0) mdays(2)=29
+  if (mod(iyr,100)==0) mdays(2)=28
+  if (mod(iyr,400)==0) mdays(2)=29
+else if ( leap==cal_360 ) then ! 360 day calendar
+  mdays=(/30,30,30,30,30,30,30,30,30,30,30,30/)
+else
+  write(6,*) "ERROR: Unknown option for leap = ",leap
+  stop -1
+end if
+
+return
+end subroutine calendar_function    
