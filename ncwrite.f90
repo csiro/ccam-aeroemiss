@@ -927,7 +927,7 @@ integer, intent(in) :: nsize
 character(len=*), dimension(nsize) :: ndata
 character(len=*), intent(in) :: elemdesc
 integer status, varid, vtype, n
-integer, dimension(2) :: nstart, ncount, nstride
+integer, dimension(2) :: nstart !, ncount, nstride
 
 status = nf_inq_varid(ncidarr(0),elemdesc,varid)
 if ( status /= nf_noerr ) then
@@ -942,11 +942,12 @@ select case(vtype)
     do n = 1,nsize
       nstart(1) = 1
       nstart(2) = n
-      ncount(1) = len_trim(ndata(n))
-      ncount(2) = 1
-      nstride(1) = 1
-      nstride(2) = 1
-      status = nf_put_vars_text(ncidarr(0),varid,nstart,ncount,nstride,ndata(n))
+      !ncount(1) = len_trim(ndata(n))
+      !ncount(2) = 1
+      !nstride(1) = 1
+      !nstride(2) = 1
+      !status = nf_put_vars_text(ncidarr(0),varid,nstart,ncount,nstride,ndata(n))
+      status = nf_put_var1_text(ncidarr(0),varid,nstart,ndata(n))
       if (status /= nf_noerr) Then
         write(6,*) "ERROR: Error writing 1dvar data (",status,")"
         call finishbanner
